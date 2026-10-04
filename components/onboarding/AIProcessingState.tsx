@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Sparkles, CheckCircle2 } from "@/components/Icons";
 
 interface AIProcessingStateProps {
   onComplete: () => void;
@@ -40,64 +41,59 @@ export default function AIProcessingState({ onComplete }: AIProcessingStateProps
       aria-busy="true"
       className="max-w-xl mx-auto py-12 px-4 text-center"
     >
-      {/* Glowing AI Spinner Icon */}
-      <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 animate-spin blur-md opacity-60"></div>
-        <div className="relative w-20 h-20 rounded-full bg-slate-950 border border-indigo-500/40 flex items-center justify-center shadow-2xl">
-          <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/50 flex items-center justify-center animate-pulse">
-            <span className="text-xl">✨</span>
-          </div>
+      {/* Sleek Slate AI Spinner Icon */}
+      <div className="relative w-20 h-20 mx-auto mb-8 flex items-center justify-center">
+        <div className="absolute inset-0 rounded-full border-2 border-slate-200 border-t-slate-900 animate-spin"></div>
+        <div className="relative w-14 h-14 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+          <Sparkles className="w-6 h-6 text-slate-900 animate-pulse" />
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-white tracking-tight">
+      <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
         VifeAI is Building Your Blueprint
       </h2>
-      <p className="text-xs text-slate-400 mt-2">
+      <p className="text-xs text-slate-600 mt-2">
         Translating operational descriptions into dynamic entities & relationships
       </p>
 
       {/* Progress Bar */}
       <div className="mt-8 mb-8 max-w-md mx-auto">
-        <div className="flex justify-between text-xs text-slate-400 font-mono mb-2">
+        <div className="flex justify-between text-xs text-slate-600 font-mono mb-2">
           <span>Processing Prompt</span>
-          <span className="text-indigo-400 font-bold">{progressPct}%</span>
+          <span className="text-slate-900 font-bold">{progressPct}%</span>
         </div>
-        <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800 p-0.5">
+        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
           <div
-            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-full transition-all duration-700 ease-out"
+            className="h-full bg-slate-900 rounded-full transition-all duration-700 ease-out"
             style={{ width: `${progressPct}%` }}
           ></div>
         </div>
       </div>
 
       {/* Milestones Checklist */}
-      <div className="max-w-md mx-auto rounded-2xl bg-slate-900/80 border border-slate-800 p-5 text-left space-y-3.5 backdrop-blur-md">
+      <div className="max-w-md mx-auto rounded-2xl bg-white border border-slate-200 p-5 text-left space-y-3 shadow-2xs">
         {MILESTONES.map((label, idx) => {
           const isDone = idx < currentStep;
           const isCurrent = idx === currentStep;
-          const isUpcoming = idx > currentStep;
 
           return (
             <div
               key={idx}
               className={`flex items-center gap-3 text-xs transition-all duration-300 ${
                 isDone
-                  ? "text-slate-300 font-medium"
+                  ? "text-slate-900 font-semibold"
                   : isCurrent
-                  ? "text-indigo-300 font-semibold"
-                  : "text-slate-600"
+                  ? "text-slate-900 font-bold"
+                  : "text-slate-400"
               }`}
             >
-              <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs">
+              <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0">
                 {isDone ? (
-                  <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
-                    ✓
-                  </span>
+                  <CheckCircle2 className="w-4 h-4 text-slate-900" />
                 ) : isCurrent ? (
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping"></span>
+                  <span className="w-2 h-2 rounded-full bg-slate-900 animate-ping"></span>
                 ) : (
-                  <span className="w-2 h-2 rounded-full bg-slate-700"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
                 )}
               </div>
               <span>{label}</span>

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { EntityBlueprint, FieldBlueprint } from "@/lib/api/workspace";
 import FieldPreview from "./FieldPreview";
+import { Pencil, Trash2 } from "@/components/Icons";
 
 interface EntityPreviewCardProps {
   entity: EntityBlueprint;
@@ -29,7 +30,7 @@ export default function EntityPreviewCard({
   };
 
   return (
-    <div className="group rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all p-5 shadow-xl flex flex-col justify-between">
+    <div className="group rounded-2xl bg-white border border-slate-200 hover:border-slate-400 transition-all p-5 shadow-2xs flex flex-col justify-between">
       <div>
         {/* Entity Card Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -43,14 +44,14 @@ export default function EntityPreviewCard({
                   onChange={(e) => setNameInput(e.target.value)}
                   onBlur={handleSaveName}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-                  className="px-2.5 py-1 bg-slate-950 border border-indigo-500 rounded-lg text-white font-bold text-base w-full focus:outline-none"
+                  className="px-2.5 py-1 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-extrabold text-base w-full focus:outline-none"
                 />
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <h3
                   onDoubleClick={() => setIsEditingName(true)}
-                  className="text-base sm:text-lg font-bold text-white tracking-tight hover:text-indigo-300 cursor-pointer truncate"
+                  className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight hover:text-black cursor-pointer truncate"
                   title="Double click or tap edit to rename entity"
                 >
                   {entity.name}
@@ -58,44 +59,44 @@ export default function EntityPreviewCard({
                 <button
                   type="button"
                   onClick={() => setIsEditingName(true)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors p-1"
+                  className="text-slate-400 hover:text-slate-700 transition-colors p-1"
                   title="Rename entity"
                 >
-                  ✏️
+                  <Pencil className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
             {entity.description && (
-              <p className="text-xs text-slate-400 mt-1 leading-normal line-clamp-2">
+              <p className="text-xs text-slate-600 mt-1 leading-normal line-clamp-2">
                 {entity.description}
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
+            <span className="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-[10px] font-bold uppercase tracking-wider">
               Entity
             </span>
             <button
               type="button"
               onClick={() => onRemoveEntity(entity.id)}
-              className="text-slate-500 hover:text-rose-400 transition-colors p-1"
+              className="text-slate-400 hover:text-red-600 transition-colors p-1"
               title="Remove this entity"
             >
-              🗑️
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="my-4 border-t border-slate-800/80"></div>
+        <div className="my-4 border-t border-slate-100"></div>
 
         {/* Dynamic Fields List */}
         <FieldPreview fields={entity.fields} onUpdateFields={handleUpdateFields} />
       </div>
 
-      <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
         <span>{entity.fields.length} Configured Attributes</span>
-        <span className="text-slate-600">Dynamic AI Schema</span>
+        <span className="text-slate-500 font-semibold">AI Schema</span>
       </div>
     </div>
   );

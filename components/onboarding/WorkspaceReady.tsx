@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { CheckCircle2, ArrowRight } from "@/components/Icons";
 
 interface WorkspaceReadyProps {
   workspaceName: string;
@@ -10,38 +11,37 @@ interface WorkspaceReadyProps {
 export default function WorkspaceReady({ workspaceName }: WorkspaceReadyProps) {
   return (
     <div className="max-w-lg mx-auto py-12 px-4 text-center">
-      {/* Celebration Icon */}
-      <div className="relative w-28 h-28 mx-auto mb-8 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping"></div>
-        <div className="relative w-24 h-24 rounded-full bg-slate-900 border-2 border-emerald-500/60 flex items-center justify-center shadow-2xl shadow-emerald-500/20">
-          <span className="text-4xl">🎉</span>
+      {/* Success Icon */}
+      <div className="relative w-20 h-20 mx-auto mb-8 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-xl">
+          <CheckCircle2 className="w-8 h-8" />
         </div>
       </div>
 
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-4">
-        ✓ Workspace Provisioned & Live
+      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider mb-4">
+        Workspace Provisioned & Live
       </div>
 
-      <h1 className="text-3xl font-extrabold text-white tracking-tight">
+      <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
         {workspaceName}
       </h1>
 
-      <p className="mt-3 text-base text-slate-300 max-w-md mx-auto leading-relaxed">
-        Your tailored workspace is ready for daily operations. VifeAI has structured your dynamic models, tables, and workflows.
+      <p className="mt-3 text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+        Your workspace blueprint has been successfully configured and saved. VifeAI has structured your dynamic models, tables, and workflows.
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
-          href="/dashboard"
-          className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-500 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white font-bold text-base shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all cursor-pointer group w-full sm:w-auto"
+          href="/"
+          className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-base shadow-md transition-all cursor-pointer group w-full sm:w-auto"
         >
-          <span>Open Workspace</span>
-          <span className="group-hover:translate-x-1.5 transition-transform">→</span>
+          <span>Return to Home</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
 
       <p className="text-xs text-slate-500 mt-6">
-        You can customize entities, add team members, or generate new views anytime from Workspace Settings.
+        You can return to onboarding anytime to generate or tweak new business workspace blueprints.
       </p>
     </div>
   );

@@ -37,7 +37,6 @@ export default function OnboardingPage() {
           setState((prev) => ({
             ...prev,
             ...parsed,
-            // Resume at prompt or review if state was saved
             step: parsed.step === "generating" || parsed.step === "provisioning" ? "prompt" : parsed.step,
           }));
         }
@@ -93,7 +92,6 @@ export default function OnboardingPage() {
     if (state.blueprint) {
       setState((prev) => ({ ...prev, step: "review" }));
     } else {
-      // If network was slow, wait briefly or retry
       setTimeout(() => {
         setState((prev) => ({ ...prev, step: "review" }));
       }, 500);
@@ -117,7 +115,6 @@ export default function OnboardingPage() {
 
     try {
       await provisionWorkspace(state.blueprint);
-      // Success will transition in handleProvisioningComplete
     } catch {
       setState((prev) => ({
         ...prev,
@@ -147,13 +144,13 @@ export default function OnboardingPage() {
   if (!isInitialized) return null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      {/* Quiet, Distraction-Free Top Header (Section 03) */}
-      <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+      {/* Quiet, Distraction-Free Top Header */}
+      <header className="border-b border-slate-200 bg-white sticky top-0 z-50 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <VifeMSLogo theme="dark" size="sm" />
-            <span className="hidden sm:inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400">
+            <VifeMSLogo theme="light" size="sm" />
+            <span className="hidden sm:inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700">
               Workspace Setup
             </span>
           </div>
@@ -168,21 +165,21 @@ export default function OnboardingPage() {
               return (
                 <div
                   key={s.key}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
                     isCurrent
-                      ? "bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-bold"
+                      ? "bg-slate-900 text-white font-bold shadow-2xs"
                       : isPast
-                      ? "text-slate-400 font-medium"
-                      : "text-slate-700 hidden md:flex"
+                      ? "text-slate-700 font-medium"
+                      : "text-slate-400 hidden md:flex"
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
                       isCurrent
-                        ? "bg-indigo-400 animate-pulse"
+                        ? "bg-white animate-pulse"
                         : isPast
-                        ? "bg-emerald-400"
-                        : "bg-slate-800"
+                        ? "bg-slate-800"
+                        : "bg-slate-300"
                     }`}
                   ></span>
                   <span>{s.label}</span>
@@ -229,7 +226,7 @@ export default function OnboardingPage() {
       </main>
 
       {/* Quiet Footer */}
-      <footer className="border-t border-slate-900 py-4 text-center text-[11px] text-slate-600">
+      <footer className="border-t border-slate-200 bg-white py-4 text-center text-[11px] text-slate-500 font-medium">
         VifeMS Engine • Dynamic AI Workspace Provisioning
       </footer>
     </div>

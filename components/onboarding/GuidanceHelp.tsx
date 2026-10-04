@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Sparkles, CheckCircle2 } from "@/components/Icons";
 
 interface GuidanceHelpProps {
   onSelectSamplePrompt?: (prompt: string) => void;
@@ -33,20 +34,20 @@ export default function GuidanceHelp({ onSelectSamplePrompt }: GuidanceHelpProps
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="mt-6 rounded-2xl bg-slate-900/60 border border-slate-800 p-5 backdrop-blur-sm">
+    <div className="mt-6 rounded-2xl bg-white border border-slate-200 p-5 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xs font-bold">
-            💡
+          <div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
-          <h3 className="text-sm font-semibold text-slate-200 tracking-wide">
-            Helpful Contextual Guidance
+          <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+            Contextual Guidance & Tips
           </h3>
         </div>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="text-xs font-medium text-slate-400 hover:text-white transition-colors cursor-pointer"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
         >
           {isOpen ? "Hide tips" : "Show tips"}
         </button>
@@ -54,32 +55,32 @@ export default function GuidanceHelp({ onSelectSamplePrompt }: GuidanceHelpProps
 
       {isOpen && (
         <div className="mt-4 space-y-4">
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Provide light prompts in natural plain language. Include details such as:
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Describe your business operations in natural plain language. Include details such as:
           </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-slate-300">
-            <li className="flex items-start gap-2 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/80">
-              <span className="text-emerald-400 font-bold">•</span>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+            <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
               <span>What products or services you sell or manage</span>
             </li>
-            <li className="flex items-start gap-2 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/80">
-              <span className="text-indigo-400 font-bold">•</span>
+            <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
               <span>Key information you need to track daily</span>
             </li>
-            <li className="flex items-start gap-2 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/80">
-              <span className="text-cyan-400 font-bold">•</span>
+            <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
               <span>How your team communicates or moves work</span>
             </li>
-            <li className="flex items-start gap-2 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/80">
-              <span className="text-amber-400 font-bold">•</span>
+            <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
               <span>Repetitive tasks or paperwork you want to organize</span>
             </li>
           </ul>
 
           {onSelectSamplePrompt && (
-            <div className="pt-2 border-t border-slate-800/80">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                Click to try a sample description:
+            <div className="pt-3 border-t border-slate-100">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                Sample Prompts:
               </span>
               <div className="flex flex-wrap gap-2">
                 {SAMPLE_PROMPTS.map((sample, idx) => (
@@ -87,9 +88,10 @@ export default function GuidanceHelp({ onSelectSamplePrompt }: GuidanceHelpProps
                     key={idx}
                     type="button"
                     onClick={() => onSelectSamplePrompt(sample.prompt)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all cursor-pointer hover:border-slate-500"
+                    className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    ✨ {sample.title}
+                    <Sparkles className="w-3 h-3 text-slate-600" />
+                    <span>{sample.title}</span>
                   </button>
                 ))}
               </div>

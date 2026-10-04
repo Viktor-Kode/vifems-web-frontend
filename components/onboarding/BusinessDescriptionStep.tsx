@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import GuidanceHelp from "./GuidanceHelp";
+import { ArrowRight, Sparkles, AlertTriangle, CheckCircle2 } from "@/components/Icons";
 
 interface BusinessDescriptionStepProps {
   initialDescription: string;
@@ -9,8 +9,50 @@ interface BusinessDescriptionStepProps {
   error?: string | null;
 }
 
-const MIN_CHARS = 50;
-const MAX_CHARS = 5000;
+const TEMPLATES = [
+  {
+    icon: "🧁",
+    category: "Food & Bakery",
+    title: "Custom Cake Bakery",
+    prompt:
+      "I run a custom cake bakery. Customers place orders for cakes, ingredients need tracking, and we manage delivery dates, payments, and order status.",
+  },
+  {
+    icon: "🚗",
+    category: "Automotive",
+    title: "Auto Repair Workshop",
+    prompt:
+      "I own an auto repair shop. Customers bring vehicles for diagnostics and repairs. I track customers, vehicle models, spare parts inventory, jobs, and invoices.",
+  },
+  {
+    icon: "🏢",
+    category: "Real Estate",
+    title: "Property Management",
+    prompt:
+      "I manage rental properties. Tenants sign leases, log maintenance tickets, and pay rent. I need to track properties, tenants, tickets, and payment history.",
+  },
+  {
+    icon: "💻",
+    category: "Services",
+    title: "Digital Design Agency",
+    prompt:
+      "We are a digital design studio. Clients hire us for projects. We track client accounts, active projects, deliverables, team deadlines, and billing status.",
+  },
+  {
+    icon: "🩺",
+    category: "Healthcare",
+    title: "Medical Clinic",
+    prompt:
+      "We run a private clinic. Patients schedule appointments with doctors. We track patient records, doctor schedules, prescriptions, and billing invoices.",
+  },
+  {
+    icon: "🎓",
+    category: "Education",
+    title: "Learning Academy",
+    prompt:
+      "We manage a tutoring academy. Students register for courses taught by instructors. We track enrollment, class schedules, attendance, and tuition fees.",
+  },
+];
 
 export default function BusinessDescriptionStep({
   initialDescription,
@@ -18,99 +60,107 @@ export default function BusinessDescriptionStep({
   error,
 }: BusinessDescriptionStepProps) {
   const [description, setDescription] = useState(initialDescription || "");
-  const charCount = description.length;
-  const isMinMet = charCount >= MIN_CHARS;
-  const isMaxExceeded = charCount > MAX_CHARS;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isMinMet || isMaxExceeded) return;
+    if (!description.trim()) return;
     onSubmit(description.trim());
   };
 
-  const handleSelectSample = (samplePrompt: string) => {
-    setDescription(samplePrompt);
-  };
-
   return (
-    <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-4">
-          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-          Step 1 of 3 • Business Prompt
+    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
+      {/* Hero Header */}
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 text-white text-xs font-semibold tracking-wide mb-5 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-slate-300" />
+          <span>AI Workspace Generator</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Tell VifeMS about your business
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          Describe your business. <br className="hidden sm:inline" />
+          <span className="text-slate-500 font-extrabold">We&apos;ll build your workspace.</span>
         </h1>
-        <p className="mt-3 text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
-          Describe what your business does and how you manage it. VifeAI will use this to design your workspace.
+        <p className="mt-4 text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Type what your business does in plain language or choose a template below. VifeAI will instantly architect your custom database, forms, and workflows.
         </p>
       </div>
 
-      {/* Error banner if previous attempt failed */}
+      {/* Error banner */}
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex items-start gap-3">
-          <span className="text-red-400 text-base font-bold">⚠️</span>
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-red-200">AI Blueprint Generation Issue</p>
-            <p className="text-xs text-red-300/90 mt-0.5">{error}</p>
+            <p className="font-bold text-red-900">Blueprint Generation Notice</p>
+            <p className="text-xs text-red-700 mt-0.5">{error}</p>
           </div>
         </div>
       )}
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative rounded-2xl bg-slate-900 border border-slate-800 focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all p-1">
+      {/* Main Input Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="rounded-3xl bg-white border-2 border-slate-200 focus-within:border-slate-900 focus-within:ring-4 focus-within:ring-slate-900/10 transition-all p-3 shadow-md">
           <textarea
-            rows={7}
+            rows={5}
             required
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="&quot;I run a custom cake bakery. Customers place orders for different types of cakes, and I need to track customers, cake designs, ingredients, payments, delivery dates, and order status.&quot;"
-            className="w-full bg-transparent p-5 text-slate-100 placeholder:text-slate-500 text-sm leading-relaxed focus:outline-none resize-y min-h-[160px]"
+            placeholder="Tell VifeAI about your business... (e.g., 'I run a fitness gym. I need to track members, class schedules, trainer assignments, and monthly membership payments.')"
+            className="w-full bg-transparent p-4 text-slate-900 placeholder:text-slate-400 text-base leading-relaxed focus:outline-none resize-y min-h-[140px] font-medium"
           />
 
-          {/* Character counter & min warning */}
-          <div className="px-5 py-3 border-t border-slate-800/80 flex items-center justify-between text-xs bg-slate-950/40 rounded-b-xl">
-            <div>
-              {!isMinMet && charCount > 0 ? (
-                <span className="text-amber-400 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                  Need {MIN_CHARS - charCount} more characters for accuracy
-                </span>
-              ) : isMinMet ? (
-                <span className="text-emerald-400 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Ready for AI Generation
-                </span>
-              ) : (
-                <span className="text-slate-500">Minimum {MIN_CHARS} characters</span>
-              )}
+          <div className="px-4 py-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/80 rounded-2xl">
+            <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-slate-700" />
+              <span>Plain language • No technical knowledge required</span>
             </div>
 
-            <div className="font-mono text-slate-400">
-              <span className={charCount > MAX_CHARS ? "text-red-400 font-bold" : ""}>
-                {charCount}
-              </span>
-              <span className="text-slate-600"> / {MAX_CHARS}</span>
-            </div>
+            <button
+              type="submit"
+              disabled={!description.trim()}
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+            >
+              <span>Generate Workspace</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
 
-        {/* Guidance Help Section */}
-        <GuidanceHelp onSelectSamplePrompt={handleSelectSample} />
+        {/* Quick Business Templates Grid */}
+        <div className="pt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+              Or Pick a Sample Business Template
+            </h3>
+            <span className="text-xs text-slate-400 font-medium">Click any to load prompt</span>
+          </div>
 
-        {/* Submit Action */}
-        <div className="pt-4 flex justify-end">
-          <button
-            type="submit"
-            disabled={!isMinMet || isMaxExceeded}
-            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-          >
-            <span>Generate Workspace Blueprint</span>
-            <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {TEMPLATES.map((tmpl, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setDescription(tmpl.prompt)}
+                className="text-left p-4 rounded-2xl bg-white border border-slate-200 hover:border-slate-900 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-2xl">{tmpl.icon}</span>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                      {tmpl.category}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-black mb-1">
+                    {tmpl.title}
+                  </h4>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                    {tmpl.prompt}
+                  </p>
+                </div>
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-end text-xs font-semibold text-slate-900 group-hover:underline">
+                  <span>Use Template →</span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </form>
     </div>
