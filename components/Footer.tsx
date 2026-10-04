@@ -19,7 +19,7 @@ export function Footer() {
           <Link href="/privacy" className="hover:text-slate-900 transition-colors">
             Security & Privacy
           </Link>
-          <Link href="/onboarding" className="hover:text-slate-900 transition-colors">
+          <Link href="/signup" className="hover:text-slate-900 transition-colors">
             Create workspace
           </Link>
         </div>

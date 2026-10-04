@@ -498,7 +498,7 @@ export function Hero() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto mb-6">
             <Link
-              href="/onboarding"
+              href="/signup"
               className="relative inline-flex items-center justify-center gap-3 px-5 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-slate-900 hover:bg-black rounded-full shadow-md hover:shadow-lg transition-all duration-200 border border-slate-800 group cursor-pointer"
             >
               <span>Create My Management System</span>

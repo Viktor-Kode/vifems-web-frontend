@@ -2,18 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  User,
-  Mail,
-  Lock,
-  Google,
-  ArrowLeft,
-  Sparkles
-} from "@/components/Icons";
-
+import { User, Mail, Lock, Google, ArrowLeft } from "@/components/Icons";
 import AuthMockupPanel from "@/components/AuthMockupPanel";
-
 import VifeMSLogo from "@/components/VifeMSLogo";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function SignupPage() {
   const [isLoadingSkeleton, setIsLoadingSkeleton] = useState(true);
@@ -24,34 +17,79 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initial loading form skeleton simulation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoadingSkeleton(false);
-    }, 600);
+    const timer = setTimeout(() => setIsLoadingSkeleton(false), 600);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      window.location.href = "/onboarding";
-    }, 800);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Registration failed. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success — auto-login by calling login endpoint
+      const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+
+      if (loginRes.ok) {
+        window.location.href = "/dashboard";
+      } else {
+        // Registration worked but auto-login failed — send to login with success banner
+        window.location.href = "/login?registered=true";
+      }
+    } catch {
+      setError("Network error. Is the backend running?");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    window.location.href = `${API_URL}/api/auth/google`;
   };
 
   return (
     <div className="min-h-screen w-full bg-white lg:bg-slate-950 flex flex-col lg:flex-row text-slate-900 lg:text-slate-100 font-sans selection:bg-slate-100 selection:text-slate-900">
-      {/* Left Column: Reusable Mockup Panel */}
       <AuthMockupPanel />
-
-      {/* Right Column: Scrollable Form Panel with Back to Home Button & Mobile Logo at Top */}
       <div className="w-full lg:w-1/2 min-h-screen lg:h-screen lg:overflow-y-auto bg-white text-slate-900 p-6 sm:p-10 lg:p-16 flex flex-col justify-between">
         <div className="max-w-md w-full mx-auto my-auto">
-          {/* Top Form Navigation: Back to Home Link & Mobile Logo */}
           <div className="flex items-center justify-between mb-8">
             <Link
               href="/"
@@ -60,21 +98,24 @@ export default function SignupPage() {
               <ArrowLeft className="w-3.5 h-3.5 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
               <span>Back to Home</span>
             </Link>
-
-            {/* Mobile Brand Logo */}
             <div className="lg:hidden">
               <VifeMSLogo theme="light" size="sm" />
             </div>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Create your account
-            </h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Create your account</h1>
             <p className="text-slate-600 text-sm mt-2">
               Enter your information below to register your business workspace.
             </p>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+              {error}
+            </div>
+          )}
 
           {/* Form Skeleton Loading State */}
           {isLoadingSkeleton ? (
@@ -88,15 +129,11 @@ export default function SignupPage() {
                 <div className="h-12 bg-slate-100 rounded-xl w-full"></div>
               </div>
               <div className="space-y-1.5">
-                <div className="h-3 bg-slate-200 rounded w-24"></div>
+                <div className="h-3 bg-slate-200 rounded w-28"></div>
                 <div className="h-12 bg-slate-100 rounded-xl w-full"></div>
               </div>
               <div className="space-y-1.5">
                 <div className="h-3 bg-slate-200 rounded w-20"></div>
-                <div className="h-12 bg-slate-100 rounded-xl w-full"></div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="h-3 bg-slate-200 rounded w-28"></div>
                 <div className="h-12 bg-slate-100 rounded-xl w-full"></div>
               </div>
               <div className="h-12 bg-slate-900/20 rounded-xl w-full mt-6"></div>
@@ -204,7 +241,7 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              {/* Sign In Primary Button */}
+              {/* Sign Up Button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -215,24 +252,19 @@ export default function SignupPage() {
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Creating Account...
                   </>
-                ) : (
-                  "Sign Up"
-                )}
+                ) : "Sign Up"}
               </button>
 
-              {/* Divider */}
               <div className="relative my-6 text-center">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200"></div>
                 </div>
-                <span className="relative bg-white px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  OR
-                </span>
+                <span className="relative bg-white px-4 text-xs font-semibold uppercase tracking-wider text-slate-400">OR</span>
               </div>
 
-              {/* Continue with Google */}
               <button
                 type="button"
+                onClick={handleGoogleSignup}
                 className="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-3 cursor-pointer shadow-2xs"
               >
                 <Google className="w-5 h-5" />

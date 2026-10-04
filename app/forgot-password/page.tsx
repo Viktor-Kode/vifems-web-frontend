@@ -4,30 +4,48 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, ArrowLeft, Sparkles } from "@/components/Icons";
 import AuthMockupPanel from "@/components/AuthMockupPanel";
-
 import VifeMSLogo from "@/components/VifeMSLogo";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function ForgotPasswordPage() {
   const [isLoadingSkeleton, setIsLoadingSkeleton] = useState(true);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initial loading skeleton simulation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoadingSkeleton(false);
-    }, 600);
+    const timer = setTimeout(() => setIsLoadingSkeleton(false), 600);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
       setIsSent(true);
-    }, 1000);
+    } catch {
+      setError("Network error. Is the backend running?");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -62,6 +80,13 @@ export default function ForgotPasswordPage() {
               Enter your registered email address and we&apos;ll send you instructions to reset your password.
             </p>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+              {error}
+            </div>
+          )}
 
           {/* Form Skeleton Loading State */}
           {isLoadingSkeleton ? (

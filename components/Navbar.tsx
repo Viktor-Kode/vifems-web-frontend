@@ -31,7 +31,7 @@ export function Navbar() {
             FAQ
           </a>
           <Link
-            href="/onboarding"
+            href="/signup"
             className="relative inline-flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-black rounded-full shadow-sm hover:shadow-md transition-all duration-200 border border-slate-800 group shrink-0"
           >
             <span>Get Started</span>
@@ -44,7 +44,7 @@ export function Navbar() {
         {/* Mobile Hamburger Toggle Button (md:hidden) */}
         <div className="flex items-center gap-3 md:hidden">
           <Link
-            href="/onboarding"
+            href="/signup"
             className="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded-full shadow-xs"
           >
             <span>Get Started</span>
@@ -84,7 +84,7 @@ export function Navbar() {
             </a>
             <div className="pt-2 border-t border-slate-100">
               <Link
-                href="/onboarding"
+                href="/signup"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="w-full flex items-center justify-center gap-2 py-3 px-5 text-sm font-bold text-white bg-slate-900 hover:bg-black rounded-xl shadow-md transition-all"
               >
