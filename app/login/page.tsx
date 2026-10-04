@@ -60,7 +60,7 @@ function LoginForm() {
         return;
       }
 
-      window.location.href = "/dashboard";
+      window.location.href = "/onboarding";
     } catch {
       setError("Network error. Is the backend running?");
       setIsSubmitting(false);

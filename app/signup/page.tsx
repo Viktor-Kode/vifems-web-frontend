@@ -70,7 +70,7 @@ export default function SignupPage() {
       });
 
       if (loginRes.ok) {
-        window.location.href = "/dashboard";
+        window.location.href = "/onboarding";
       } else {
         // Registration worked but auto-login failed — send to login with success banner
         window.location.href = "/login?registered=true";
