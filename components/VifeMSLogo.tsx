@@ -33,12 +33,18 @@ export function VifeMSLogo({
         viewBox="0 0 100 80"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-full w-auto aspect-square shrink-0"
+        className="h-full w-auto aspect-square shrink-0 drop-shadow-md"
       >
+        <defs>
+          <linearGradient id="logoGradient" x1="0" y1="0" x2="100" y2="80" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#3B82F6" />
+            <stop offset="1" stopColor="#8B5CF6" />
+          </linearGradient>
+        </defs>
         <path
           d="M 12 18 L 32 62 C 34 66 38 66 40 62 L 54 30 C 56 26 59 26 61 30 L 74 62 C 76 66 80 66 82 62 L 88 18"
-          stroke={markColor}
-          strokeWidth="13"
+          stroke="url(#logoGradient)"
+          strokeWidth="14"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
