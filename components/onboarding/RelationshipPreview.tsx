@@ -18,11 +18,17 @@ export default function RelationshipPreview({
   const entityMap = new Map(entities.map((e) => [e.id, e.name]));
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 p-5 mb-8 shadow-2xs">
+    <div
+      className="rounded-2xl p-5 mb-8 border"
+      style={{ background: "#FFFFFF", borderColor: "#D3DBE8", boxShadow: "0 1px 4px rgba(14,26,46,.06)" }}
+    >
       <div className="flex items-center gap-2 mb-3">
-        <Link2 className="w-4 h-4 text-slate-600" />
-        <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
-          Inferred Business Workflow & Relationships
+        <Link2 className="w-4 h-4" style={{ color: "#475670" }} />
+        <h4
+          className="text-xs font-extrabold uppercase tracking-wider"
+          style={{ color: "#0E1A2E" }}
+        >
+          Inferred Business Workflow &amp; Relationships
         </h4>
       </div>
 
@@ -33,14 +39,22 @@ export default function RelationshipPreview({
 
           return (
             <React.Fragment key={rel.id || idx}>
-              {idx > 0 && <span className="text-slate-300 font-bold px-1">•</span>}
-              <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900">
-                <span className="font-bold text-slate-900">{fromName}</span>
-                <span className="text-[10px] text-slate-600 font-mono px-1.5 py-0.5 rounded bg-white border border-slate-200">
+              {idx > 0 && (
+                <span className="font-bold px-1" style={{ color: "#D3DBE8" }}>•</span>
+              )}
+              <div
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border"
+                style={{ background: "#F4F6FA", borderColor: "#D3DBE8", color: "#0E1A2E" }}
+              >
+                <span className="font-bold" style={{ color: "#0E1A2E" }}>{fromName}</span>
+                <span
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+                  style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#475670" }}
+                >
                   ({rel.label})
                 </span>
-                <span className="text-slate-400">──►</span>
-                <span className="font-bold text-slate-900">{toName}</span>
+                <span style={{ color: "#A2B2CB" }}>──►</span>
+                <span className="font-bold" style={{ color: "#0E1A2E" }}>{toName}</span>
               </div>
             </React.Fragment>
           );

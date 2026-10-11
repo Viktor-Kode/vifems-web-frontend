@@ -23,10 +23,7 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
 
   const handleSaveEdit = (fieldId: string) => {
     if (!editingName.trim()) return;
-    const updated = fields.map((f) =>
-      f.id === fieldId ? { ...f, name: editingName.trim() } : f
-    );
-    onUpdateFields(updated);
+    onUpdateFields(fields.map((f) => (f.id === fieldId ? { ...f, name: editingName.trim() } : f)));
     setEditingFieldId(null);
   };
 
@@ -48,7 +45,10 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+      <div
+        className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider mb-2"
+        style={{ color: "#A2B2CB" }}
+      >
         <span>Field Label</span>
         <span>Data Type</span>
       </div>
@@ -59,7 +59,10 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
         return (
           <div
             key={field.id}
-            className="group flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all text-xs"
+            className="group flex items-center justify-between p-2.5 rounded-xl border transition-all text-xs"
+            style={{ background: "#F4F6FA", borderColor: "#D3DBE8" }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#A2B2CB")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#D3DBE8")}
           >
             <div className="flex items-center gap-2 flex-1 mr-3 min-w-0">
               {isEditing ? (
@@ -70,26 +73,29 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
                   onChange={(e) => setEditingName(e.target.value)}
                   onBlur={() => handleSaveEdit(field.id)}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveEdit(field.id)}
-                  className="px-2 py-1 bg-white border border-slate-300 rounded text-slate-900 focus:outline-none w-full"
+                  className="px-2 py-1 rounded focus:outline-none w-full border text-xs"
+                  style={{ background: "#FFFFFF", borderColor: "#2563EB", color: "#0E1A2E" }}
                 />
               ) : (
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   <span
                     onClick={() => handleStartEdit(field)}
-                    className="font-semibold text-slate-900 hover:text-black cursor-pointer truncate"
+                    className="font-semibold cursor-pointer truncate"
+                    style={{ color: "#0E1A2E" }}
                     title="Click to rename field"
                   >
                     {field.name}
                   </span>
                   {field.required && (
-                    <span className="text-slate-500 font-bold text-[10px]" title="Required field">
+                    <span className="font-bold text-[10px]" style={{ color: "#475670" }} title="Required field">
                       *
                     </span>
                   )}
                   <button
                     type="button"
                     onClick={() => handleStartEdit(field)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-700 transition-opacity p-0.5"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                    style={{ color: "#A2B2CB" }}
                     title="Edit field name"
                   >
                     <Pencil className="w-3 h-3" />
@@ -99,13 +105,19 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-white text-slate-700 border border-slate-200">
+              <span
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold border"
+                style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#475670" }}
+              >
                 {field.type}
               </span>
               <button
                 type="button"
                 onClick={() => handleRemoveField(field.id)}
-                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 transition-all p-0.5"
+                className="opacity-0 group-hover:opacity-100 transition-all p-0.5"
+                style={{ color: "#A2B2CB" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#DC2626")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#A2B2CB")}
                 title="Remove field"
               >
                 <X className="w-3.5 h-3.5" />
@@ -115,20 +127,27 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
         );
       })}
 
-      {/* Add Field Inline Control */}
+      {/* Add Field */}
       {isAdding ? (
-        <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row gap-2">
+        <div
+          className="mt-2 p-2.5 rounded-xl border flex flex-col sm:flex-row gap-2"
+          style={{ background: "#F4F6FA", borderColor: "#D3DBE8" }}
+        >
           <input
             type="text"
             placeholder="Field name (e.g., Status, Date)"
             value={newFieldName}
             onChange={(e) => setNewFieldName(e.target.value)}
-            className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-slate-400"
+            className="flex-1 px-3 py-1.5 rounded-lg border text-xs focus:outline-none"
+            style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#0E1A2E" }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#2563EB")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#D3DBE8")}
           />
           <select
             value={newFieldType}
             onChange={(e) => setNewFieldType(e.target.value as FieldType)}
-            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none"
+            className="px-3 py-1.5 rounded-lg border text-xs focus:outline-none"
+            style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#0E1A2E" }}
           >
             <option value="Text">Text</option>
             <option value="Number">Number</option>
@@ -142,14 +161,18 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
             <button
               type="button"
               onClick={handleAddField}
-              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white font-semibold text-xs transition-colors"
+              className="px-3 py-1.5 rounded-lg text-white font-semibold text-xs transition-colors"
+              style={{ background: "#2563EB" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#1D4ED8")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#2563EB")}
             >
               Add
             </button>
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-2 py-1.5 text-slate-600 hover:text-slate-900 text-xs"
+              className="px-2 py-1.5 text-xs"
+              style={{ color: "#475670" }}
             >
               Cancel
             </button>
@@ -159,7 +182,16 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
         <button
           type="button"
           onClick={() => setIsAdding(true)}
-          className="mt-2 w-full py-1.5 rounded-xl border border-dashed border-slate-200 hover:border-slate-400 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-white"
+          className="mt-2 w-full py-1.5 rounded-xl border border-dashed text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#475670" }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#2563EB";
+            e.currentTarget.style.color = "#2563EB";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "#D3DBE8";
+            e.currentTarget.style.color = "#475670";
+          }}
         >
           <span>+ Add Attribute Field</span>
         </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface BusinessDescriptionStepProps {
   initialDescription: string;
@@ -29,6 +29,14 @@ export default function BusinessDescriptionStep({
   error,
 }: BusinessDescriptionStepProps) {
   const [description, setDescription] = useState(initialDescription || "");
+
+  // Sync if parent restores a saved description after mount (sessionStorage hydration)
+  useEffect(() => {
+    if (initialDescription && !description) {
+      setDescription(initialDescription);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDescription]);
 
   const charCount = description.length;
   const trimLen = description.trim().length;
