@@ -105,6 +105,23 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+              {field.type === "Select" && field.options && field.options.length > 0 && (
+                <span
+                  className="px-1.5 py-0.5 rounded text-[9px] font-mono border hidden sm:inline"
+                  style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#475670" }}
+                  title={field.options.join(", ")}
+                >
+                  {field.options.length} options
+                </span>
+              )}
+              {field.type === "Relation" && (field.targetModule || field.relatedEntityId) && (
+                <span
+                  className="px-1.5 py-0.5 rounded text-[9px] font-mono border hidden sm:inline"
+                  style={{ background: "#E2EBFF", borderColor: "#D3DBE8", color: "#2563EB" }}
+                >
+                  → {field.targetModule || field.relatedEntityId}
+                </span>
+              )}
               <span
                 className="px-2 py-0.5 rounded text-[10px] font-mono font-bold border"
                 style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#475670" }}
@@ -135,7 +152,7 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
         >
           <input
             type="text"
-            placeholder="Field name (e.g., Status, Date)"
+            placeholder="Field name (e.g., Status, Price, Date)"
             value={newFieldName}
             onChange={(e) => setNewFieldName(e.target.value)}
             className="flex-1 px-3 py-1.5 rounded-lg border text-xs focus:outline-none"
@@ -150,10 +167,15 @@ export default function FieldPreview({ fields, onUpdateFields }: FieldPreviewPro
             style={{ background: "#FFFFFF", borderColor: "#D3DBE8", color: "#0E1A2E" }}
           >
             <option value="Text">Text</option>
+            <option value="Long text">Long text</option>
             <option value="Number">Number</option>
+            <option value="Decimal">Decimal</option>
             <option value="Currency">Currency</option>
             <option value="Date">Date</option>
+            <option value="Date & Time">Date &amp; Time</option>
             <option value="Boolean">Boolean</option>
+            <option value="Email">Email</option>
+            <option value="Phone">Phone</option>
             <option value="Select">Select</option>
             <option value="Relation">Relation</option>
           </select>

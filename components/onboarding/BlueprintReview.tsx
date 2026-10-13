@@ -29,19 +29,62 @@ export default function BlueprintReview({
   };
 
   const handleUpdateEntity = (updatedEntity: EntityBlueprint) => {
+    // Clean up relationships whose sourceField was removed
+    const existingFieldNames = new Set(updatedEntity.fields.map((f) => f.name));
+    const cleanedRelationships = (blueprint.relationships || []).filter((r) => {
+      const isThisSource =
+        r.fromEntityId === updatedEntity.id ||
+        r.fromEntityId === updatedEntity.slug ||
+        r.sourceModule === updatedEntity.slug;
+      if (isThisSource && r.sourceField) {
+        return existingFieldNames.has(r.sourceField);
+      }
+      return true;
+    });
+
     onUpdateBlueprint({
       ...blueprint,
       entities: blueprint.entities.map((e) => (e.id === updatedEntity.id ? updatedEntity : e)),
+      relationships: cleanedRelationships,
     });
   };
 
   const handleRemoveEntity = (entityId: string) => {
+    const targetEntity = blueprint.entities.find((e) => e.id === entityId);
+    const targetSlug = targetEntity?.slug || "";
+
+    // Remove entity and clean up relation fields referencing the deleted entity
+    const updatedEntities = blueprint.entities
+      .filter((e) => e.id !== entityId)
+      .map((e) => ({
+        ...e,
+        fields: e.fields.filter(
+          (f) =>
+            f.type !== "Relation" ||
+            (f.targetModule !== entityId &&
+              f.targetModule !== targetSlug &&
+              f.relatedEntityId !== entityId &&
+              f.relatedEntityId !== targetSlug)
+        ),
+      }));
+
+    // Remove relationships referencing deleted entity or slug
+    const updatedRelationships = (blueprint.relationships || []).filter(
+      (r) =>
+        r.fromEntityId !== entityId &&
+        r.fromEntityId !== targetSlug &&
+        r.sourceModule !== targetSlug &&
+        r.sourceModule !== entityId &&
+        r.toEntityId !== entityId &&
+        r.toEntityId !== targetSlug &&
+        r.targetModule !== targetSlug &&
+        r.targetModule !== entityId
+    );
+
     onUpdateBlueprint({
       ...blueprint,
-      entities: blueprint.entities.filter((e) => e.id !== entityId),
-      relationships: (blueprint.relationships || []).filter(
-        (r) => r.fromEntityId !== entityId && r.toEntityId !== entityId
-      ),
+      entities: updatedEntities,
+      relationships: updatedRelationships,
     });
   };
 

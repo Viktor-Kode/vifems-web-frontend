@@ -106,6 +106,24 @@ export default function EntityPreviewCard({
 
         <div className="my-4 border-t" style={{ borderColor: "#EAEFF7" }} />
 
+        {/* System Primary Key metadata */}
+        <div
+          className="mb-3 px-2.5 py-1.5 rounded-xl border flex items-center justify-between text-[11px]"
+          style={{ background: "#F8FAFC", borderColor: "#E2E8F0" }}
+        >
+          <span className="font-mono font-semibold text-slate-600 flex items-center gap-1.5">
+            <span className="text-xs">🔑</span>
+            <span>id</span>
+          </span>
+          <span
+            className="text-[10px] font-mono px-2 py-0.5 rounded-full border text-slate-600 bg-white"
+            style={{ borderColor: "#CBD5E1" }}
+            title="Auto-generated stable record identifier (UUID / platform-managed)"
+          >
+            System Primary Key
+          </span>
+        </div>
+
         {/* Fields */}
         <FieldPreview fields={entity.fields} onUpdateFields={handleUpdateFields} />
       </div>

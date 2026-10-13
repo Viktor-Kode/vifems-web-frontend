@@ -1216,10 +1216,10 @@ export default function DashboardPage() {
 
   return (
     <div className={`vf-shell ${mobileNavOpen ? "vf-nav-open" : ""} ${mobileSearchOpen ? "vf-search-open" : ""}`}>
-      <div className="vf-app">
-        {/* Mobile Backdrop */}
-        <div className="vf-bk" onClick={() => setMobileNavOpen(false)} />
+      {/* Mobile Backdrop placed outside .vf-app to avoid breaking grid columns */}
+      <div className="vf-bk" onClick={() => setMobileNavOpen(false)} />
 
+      <div className="vf-app">
         {/* ── Left Sidebar (3-pane layout architecture) ── */}
         <aside className="vf-aside" aria-label="Workspace navigation">
           <Link href="/" className="brand" aria-label="VifeMS home">
@@ -1307,11 +1307,11 @@ export default function DashboardPage() {
               ☰
             </button>
 
-            <Link href="/" className="vf-mob" style={{ textDecoration: "none", marginRight: "12px", display: "inline-flex", alignItems: "center" }}>
+            <Link href="/" className="vf-mob-logo" aria-label="VifeMS home">
               <VifeMSLogo theme="light" size="sm" />
             </Link>
 
-            <div>
+            <div className="vf-hd-title-group">
               <div className="vf-crumb">
                 {currentBlueprint?.name} / {headerTitle}
               </div>
