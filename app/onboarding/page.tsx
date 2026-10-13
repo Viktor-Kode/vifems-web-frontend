@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import VifeMSLogo from "@/components/VifeMSLogo";
 import { generateBlueprint, provisionWorkspace, Blueprint, EntityBlueprint } from "@/lib/api/workspace";
 import "./onboarding.css";
@@ -82,14 +83,19 @@ function ProgList({
 
 /* ── Main onboarding page ── */
 export default function OnboardingPage() {
+  const router = useRouter();
   const [step, setStep]                 = useState<Step>("prompt");
   const [desc, setDesc]                 = useState("");
   const [blueprint, setBlueprint]       = useState<Blueprint | null>(null);
   const [workspaceName, setWorkspaceName] = useState("");
+  const [createdWorkspaceId, setCreatedWorkspaceId] = useState<string>("");
   const [genError, setGenError]         = useState(false);
+  const [genErrorMessage, setGenErrorMessage] = useState("");
   const [provError, setProvError]       = useState(false);
+  const [provErrorMessage, setProvErrorMessage] = useState("");
   const [genDone, setGenDone]           = useState(false);
   const [provDone, setProvDone]         = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Session restore
   useEffect(() => {
@@ -119,6 +125,16 @@ export default function OnboardingPage() {
     } catch { /* ignore */ }
   }, [desc, blueprint]);
 
+  // Auto-redirect to dashboard when ready
+  useEffect(() => {
+    if (step === "ready" && createdWorkspaceId) {
+      const t = setTimeout(() => {
+        router.push(`/dashboard/${createdWorkspaceId}`);
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [step, createdWorkspaceId, router]);
+
   // Char count / hint
   const trimLen  = desc.trim().length;
   const charCount = desc.length;
@@ -127,14 +143,17 @@ export default function OnboardingPage() {
     : trimLen < 50
     ? `${50 - trimLen} more characters to go`
     : "Looks good";
-  const canSubmit = trimLen >= 50;
+  const canSubmit = trimLen >= 50 && !isSubmitting;
 
   // Step nav number
   const stepN = { prompt: 1, generating: 1, review: 2, provisioning: 3, ready: 3 }[step] ?? 1;
 
   /* ── Step 1: generate blueprint ── */
   const handleGenerate = async () => {
+    if (isSubmitting || trimLen < 50) return;
+    setIsSubmitting(true);
     setGenError(false);
+    setGenErrorMessage("");
     setGenDone(false);
     setStep("generating");
     try {
@@ -142,37 +161,49 @@ export default function OnboardingPage() {
       setBlueprint(bp);
       setWorkspaceName(bp.workspaceName || "");
       setGenDone(true);
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      setGenErrorMessage(err?.message || "Failed to generate workspace blueprint. Your description has been preserved.");
       setGenError(true);
       setStep("prompt");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const handleGenComplete = useCallback(() => setStep("review"), []);
 
   /* ── Step 2: provision ── */
   const handleProvision = async () => {
-    if (!blueprint) return;
+    if (!blueprint || isSubmitting) return;
+    setIsSubmitting(true);
     setProvError(false);
+    setProvErrorMessage("");
     setProvDone(false);
     setStep("provisioning");
     try {
-      const res = await provisionWorkspace({ ...blueprint, workspaceName, description: desc });
+      const res = await provisionWorkspace({
+        ...blueprint,
+        workspaceName: workspaceName.trim() || blueprint.workspaceName,
+        description: desc,
+      });
+      const wsId = res.workspaceId;
+      setCreatedWorkspaceId(wsId);
       setProvDone(true);
       try {
-        const payload = {
-          workspaceId: res?.workspaceId || "ws_" + Date.now(),
-          workspaceName: workspaceName || blueprint.workspaceName || "My Business Workspace",
-          blueprint: { ...blueprint, workspaceName: workspaceName || blueprint.workspaceName },
-          description: desc,
-          createdAt: Date.now(),
-        };
-        localStorage.setItem("vifems_onboarded_workspace", JSON.stringify(payload));
-        localStorage.setItem("vifems_current_workspace_id", payload.workspaceId);
-        sessionStorage.setItem("vifems_onboarded_workspace", JSON.stringify(payload));
         sessionStorage.removeItem(STORAGE_KEY);
       } catch { /* ignore */ }
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      setProvErrorMessage(err?.message || "Failed to provision workspace. Your reviewed blueprint is saved. You can retry.");
       setProvError(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   const handleProvComplete = useCallback(() => setStep("ready"), []);
@@ -185,18 +216,75 @@ export default function OnboardingPage() {
       entities: blueprint.entities.map((e) => (e.id === updated.id ? updated : e)),
     });
   };
+
   const removeEntity = (id: string) => {
     if (!blueprint) return;
+    const targetEntity = blueprint.entities.find((e) => e.id === id);
+    const targetSlug = targetEntity?.slug || "";
+
+    // Clean up entities and relation fields referencing the deleted entity
+    const updatedEntities = blueprint.entities
+      .filter((e) => e.id !== id)
+      .map((e) => ({
+        ...e,
+        fields: e.fields.filter(
+          (f) =>
+            f.type !== "Relation" ||
+            (f.targetModule !== id &&
+              f.targetModule !== targetSlug &&
+              f.relatedEntityId !== id &&
+              f.relatedEntityId !== targetSlug)
+        ),
+      }));
+
+    // Clean up relationships
+    const updatedRelationships = (blueprint.relationships || []).filter(
+      (r) =>
+        r.fromEntityId !== id &&
+        r.fromEntityId !== targetSlug &&
+        r.sourceModule !== targetSlug &&
+        r.sourceModule !== id &&
+        r.toEntityId !== id &&
+        r.toEntityId !== targetSlug &&
+        r.targetModule !== targetSlug &&
+        r.targetModule !== id
+    );
+
     setBlueprint({
       ...blueprint,
-      entities: blueprint.entities.filter((e) => e.id !== id),
-      relationships: (blueprint.relationships || []).filter(
-        (r) => r.fromEntityId !== id && r.toEntityId !== id
-      ),
+      workspaceName: blueprint.workspaceName || "",
+      description: blueprint.description || "",
+      entities: updatedEntities,
+      relationships: updatedRelationships,
     });
   };
+
   const removeField = (entity: EntityBlueprint, fieldIdx: number) => {
-    updateEntity({ ...entity, fields: entity.fields.filter((_, i) => i !== fieldIdx) });
+    if (!blueprint) return;
+    const fieldToRemove = entity.fields[fieldIdx];
+    const updatedEntity = {
+      ...entity,
+      fields: entity.fields.filter((_, i) => i !== fieldIdx),
+    };
+
+    const cleanedRelationships = (blueprint.relationships || []).filter((r) => {
+      const isThisSource =
+        r.fromEntityId === entity.id ||
+        r.fromEntityId === entity.slug ||
+        r.sourceModule === entity.slug;
+      if (isThisSource && r.sourceField && fieldToRemove) {
+        return r.sourceField !== fieldToRemove.name && r.sourceField !== fieldToRemove.id;
+      }
+      return true;
+    });
+
+    setBlueprint({
+      ...blueprint,
+      workspaceName: blueprint.workspaceName || "",
+      description: blueprint.description || "",
+      entities: blueprint.entities.map((e) => (e.id === updatedEntity.id ? updatedEntity : e)),
+      relationships: cleanedRelationships,
+    });
   };
 
   return (
@@ -232,7 +320,7 @@ export default function OnboardingPage() {
 
               {genError && (
                 <div className="err" role="alert">
-                  We couldn&apos;t build your workspace blueprint yet. Something went wrong while analyzing your business description. Your text is still here.
+                  {genErrorMessage || "We couldn't build your workspace blueprint yet. Something went wrong while analyzing your business description. Your text is still here."}
                 </div>
               )}
 
@@ -399,7 +487,7 @@ export default function OnboardingPage() {
             <ProgList labels={PROV_LABELS} isApiDone={provDone} onAllDone={handleProvComplete} />
             {provError && (
               <div className="err" role="alert">
-                Your workspace couldn&apos;t be created at this moment. Your blueprint is saved.
+                {provErrorMessage || "Your workspace couldn't be created at this moment. Your blueprint is saved."}
                 <br />
                 <button className="btn" style={{ marginTop: 10 }} onClick={handleProvision}>
                   Retry provisioning
@@ -415,7 +503,10 @@ export default function OnboardingPage() {
             <div className="ready-ic" aria-hidden="true">✓</div>
             <h1>{workspaceName}</h1>
             <p className="sub">is ready for daily operations.</p>
-            <Link href="/dashboard" className="btn">
+            <Link
+              href={createdWorkspaceId ? `/dashboard/${createdWorkspaceId}` : "/dashboard"}
+              className="btn"
+            >
               Open workspace
             </Link>
           </div>
