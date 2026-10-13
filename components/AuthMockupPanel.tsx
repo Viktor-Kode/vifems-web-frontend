@@ -11,7 +11,7 @@ export default function AuthMockupPanel() {
       {/* Left Header Logo, Text & Subtext */}
       <div className="z-10 pt-2">
         <Link href="/" className="inline-block mb-6 group">
-          <VifeMSLogo size="md" className="transition-transform group-hover:scale-105" />
+          <VifeMSLogo theme="dark" size="md" className="transition-transform group-hover:scale-105" />
         </Link>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
           Describe your business. <br />

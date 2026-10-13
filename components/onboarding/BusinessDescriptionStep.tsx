@@ -10,8 +10,8 @@ interface BusinessDescriptionStepProps {
 
 const CHIPS = [
   {
-    label: "Cake bakery",
-    text: "I run a custom cake bakery. Customers place orders for different types of cakes, and I need to track customers, cake designs, ingredients, payments, delivery dates, and order status.",
+    label: "Consulting firm",
+    text: "I run a consulting agency. I need to track client accounts, active projects, deliverables, team assignments, and billable hours.",
   },
   {
     label: "Medical clinic",
@@ -75,7 +75,7 @@ export default function BusinessDescriptionStep({
             className="ob-ta"
             maxLength={5000}
             aria-label="Business description"
-            placeholder="I run a custom cake bakery. Customers place orders for different types of cakes, and I need to track customers, cake designs, ingredients, payments, delivery dates, and order status."
+            placeholder="Describe your business operations, what you sell or manage, and the daily records or workflows you want to organize..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />

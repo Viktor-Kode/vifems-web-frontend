@@ -617,6 +617,11 @@ export default function DashboardPage() {
     | null;
 
   const [dialog, setDialog] = useState<DialogState>(null);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Initialize DB and Seed Data
   useEffect(() => {
@@ -1152,6 +1157,63 @@ export default function DashboardPage() {
           ? "Profile"
           : currentModule?.n || "Module";
 
+  if (!isMounted) {
+    return (
+      <div className="vf-shell">
+        <div className="vf-app">
+          {/* Skeleton Sidebar */}
+          <aside className="vf-aside" aria-label="Loading workspace navigation">
+            <div className="brand" style={{ padding: "4px 8px 14px" }}>
+              <VifeMSLogo theme="dark" size="md" />
+            </div>
+            <div className="vf-skel-dark" style={{ height: "38px", width: "100%", marginBottom: "16px", borderRadius: "8px" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="vf-skel-dark" style={{ height: "36px", width: "100%", borderRadius: "8px" }} />
+              <div className="vf-skel-dark" style={{ height: "36px", width: "88%", borderRadius: "8px" }} />
+              <div className="vf-skel-dark" style={{ height: "36px", width: "94%", borderRadius: "8px" }} />
+              <div className="vf-skel-dark" style={{ height: "36px", width: "80%", borderRadius: "8px" }} />
+              <div className="vf-skel-dark" style={{ height: "36px", width: "84%", borderRadius: "8px" }} />
+            </div>
+            <div className="vf-sp" />
+            <div className="vf-skel-dark" style={{ height: "48px", width: "100%", borderRadius: "10px" }} />
+          </aside>
+
+          {/* Skeleton Canvas */}
+          <div className="vf-col">
+            <header className="vf-header">
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div className="vf-skel" style={{ height: "12px", width: "130px" }} />
+                <div className="vf-skel" style={{ height: "22px", width: "170px" }} />
+              </div>
+              <div className="vf-sp" />
+              <div className="vf-skel" style={{ height: "38px", width: "240px", borderRadius: "8px" }} />
+            </header>
+
+            <main className="vf-main">
+              {/* Skeleton Hero Banner */}
+              <div className="vf-skel" style={{ height: "86px", width: "100%", borderRadius: "14px", marginBottom: "22px" }} />
+
+              {/* Skeleton Metrics */}
+              <div className="vf-mets">
+                <div className="vf-skel" style={{ height: "92px", borderRadius: "12px" }} />
+                <div className="vf-skel" style={{ height: "92px", borderRadius: "12px" }} />
+                <div className="vf-skel" style={{ height: "92px", borderRadius: "12px" }} />
+                <div className="vf-skel" style={{ height: "92px", borderRadius: "12px" }} />
+              </div>
+
+              {/* Skeleton Modules Grid */}
+              <div className="vf-mods">
+                <div className="vf-skel" style={{ height: "138px", borderRadius: "12px" }} />
+                <div className="vf-skel" style={{ height: "138px", borderRadius: "12px" }} />
+                <div className="vf-skel" style={{ height: "138px", borderRadius: "12px" }} />
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`vf-shell ${mobileNavOpen ? "vf-nav-open" : ""} ${mobileSearchOpen ? "vf-search-open" : ""}`}>
       <div className="vf-app">
@@ -1160,8 +1222,8 @@ export default function DashboardPage() {
 
         {/* ── Left Sidebar (3-pane layout architecture) ── */}
         <aside className="vf-aside" aria-label="Workspace navigation">
-          <Link href="/" className="vf-lg">
-            <VifeMSLogo size="md" />
+          <Link href="/" className="brand" aria-label="VifeMS home">
+            <VifeMSLogo theme="dark" size="md" />
           </Link>
 
           {/* Workspace Switcher */}
@@ -1317,7 +1379,7 @@ export default function DashboardPage() {
                     {currentBlueprint?.mods.slice(0, 2).map((m) => (
                       <button
                         key={m.s}
-                        className="vf-btn vf-btn w"
+                        className="vf-btn"
                         onClick={() => openRecordForm(m.s)}
                       >
                         + Add {sing(m)}
