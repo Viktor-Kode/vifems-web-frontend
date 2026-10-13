@@ -17,12 +17,13 @@ export const metadata: Metadata = {
   description: "AI-native business management platform that turns the way you run your business into a customized management workspace.",
   icons: {
     icon: [
+      { url: "/logo/vifems-icon.png", type: "image/png" },
       { url: "/favicon.ico" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/logo/vifems-icon.png",
+    apple: "/logo/vifems-icon.png",
   },
   manifest: "/site.webmanifest",
 };

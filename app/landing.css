@@ -249,6 +249,13 @@
   letter-spacing: -.02em;
   color: var(--ink);
 }
+.landing-root .logo img {
+  height: 36px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
 .landing-root .logo svg {
   width: 28px;
   height: 28px;

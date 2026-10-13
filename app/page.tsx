@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import VifeMSLogo from "@/components/VifeMSLogo";
 import "./landing.css";
 import {
   Menu,
@@ -279,24 +280,7 @@ export default function LandingPage() {
       <header className={`hdr ${scrolled ? "scrolled" : ""}`} id="top">
         <div className="wrap hdr-in">
           <Link className="logo" href="/" aria-label="VifeMS home">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 7l9 18 3-6" />
-              <path d="M27 7l-7 14" />
-              <circle cx="5" cy="7" r="1.6" fill="currentColor" />
-              <circle cx="27" cy="7" r="1.6" fill="currentColor" />
-              <circle cx="22" cy="7" r="1.6" fill="currentColor" stroke="none" />
-            </svg>
-            <span>
-              Vife<b>MS</b>
-            </span>
+            <VifeMSLogo theme="light" size="md" />
           </Link>
 
           <nav className="nav" aria-label="Main">
@@ -1186,24 +1170,7 @@ export default function LandingPage() {
           <div className="ftr-grid">
             <div>
               <Link className="logo" href="/" aria-label="VifeMS home">
-                <svg
-                  viewBox="0 0 32 32"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M5 7l9 18 3-6" />
-                  <path d="M27 7l-7 14" />
-                  <circle cx="5" cy="7" r="1.6" fill="currentColor" />
-                  <circle cx="27" cy="7" r="1.6" fill="currentColor" />
-                  <circle cx="22" cy="7" r="1.6" fill="currentColor" stroke="none" />
-                </svg>
-                <span>
-                  Vife<b>MS</b>
-                </span>
+                <VifeMSLogo theme="light" size="sm" />
               </Link>
               <p className="tag-line">Business operations, built around you.</p>
             </div>

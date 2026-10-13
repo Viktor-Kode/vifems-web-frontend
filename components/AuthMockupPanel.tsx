@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
+import VifeMSLogo from "@/components/VifeMSLogo";
 import { Sparkles } from "@/components/Icons";
 
 export default function AuthMockupPanel() {
@@ -11,14 +11,7 @@ export default function AuthMockupPanel() {
       {/* Left Header Logo, Text & Subtext */}
       <div className="z-10 pt-2">
         <Link href="/" className="inline-block mb-6 group">
-          <Image
-            src="/logo/logo.png"
-            alt="VifeMS"
-            width={140}
-            height={40}
-            className="h-9 w-auto object-contain transition-transform group-hover:scale-105 brightness-0 invert"
-            priority
-          />
+          <VifeMSLogo size="md" className="transition-transform group-hover:scale-105" />
         </Link>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
           Describe your business. <br />

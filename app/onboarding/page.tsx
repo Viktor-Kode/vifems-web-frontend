@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import VifeMSLogo from "@/components/VifeMSLogo";
 import { generateBlueprint, provisionWorkspace, Blueprint, EntityBlueprint } from "@/lib/api/workspace";
 import "./onboarding.css";
 
@@ -47,18 +48,14 @@ function ProgList({
   onAllDone: () => void;
 }) {
   const [current, setCurrent] = useState(0);
-  const [atEnd, setAtEnd] = useState(false);
+  const atEnd = current >= labels.length - 1;
 
   // Advance one item every 1600ms; stop at last item and wait for isApiDone
   useEffect(() => {
     if (atEnd) return;
-    if (current >= labels.length - 1) {
-      setAtEnd(true);
-      return;
-    }
     const t = setTimeout(() => setCurrent((p) => p + 1), 1600);
     return () => clearTimeout(t);
-  }, [current, atEnd, labels.length]);
+  }, [current, atEnd]);
 
   // Once at end and API done, fire completion
   useEffect(() => {
@@ -93,24 +90,26 @@ export default function OnboardingPage() {
   const [provError, setProvError]       = useState(false);
   const [genDone, setGenDone]           = useState(false);
   const [provDone, setProvDone]         = useState(false);
-  const [ready, setReady]               = useState(false);
 
   // Session restore
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const p = JSON.parse(saved);
-        if (p.desc) setDesc(p.desc);
-        if (p.blueprint) {
-          setBlueprint(p.blueprint);
-          setWorkspaceName(p.blueprint.workspaceName || "");
-          setStep("review");
-          return;
+    const timer = setTimeout(() => {
+      try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const p = JSON.parse(saved);
+          if (p.desc) setDesc(p.desc);
+          if (p.blueprint) {
+            setBlueprint(p.blueprint);
+            setWorkspaceName(p.blueprint.workspaceName || "");
+            setStep("review");
+            return;
+          }
         }
-      }
-    } catch { /* ignore */ }
-    setStep("prompt");
+      } catch { /* ignore */ }
+      setStep("prompt");
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Persist on change
@@ -157,9 +156,21 @@ export default function OnboardingPage() {
     setProvDone(false);
     setStep("provisioning");
     try {
-      await provisionWorkspace({ ...blueprint, workspaceName, description: desc });
+      const res = await provisionWorkspace({ ...blueprint, workspaceName, description: desc });
       setProvDone(true);
-      try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+      try {
+        const payload = {
+          workspaceId: res?.workspaceId || "ws_" + Date.now(),
+          workspaceName: workspaceName || blueprint.workspaceName || "My Business Workspace",
+          blueprint: { ...blueprint, workspaceName: workspaceName || blueprint.workspaceName },
+          description: desc,
+          createdAt: Date.now(),
+        };
+        localStorage.setItem("vifems_onboarded_workspace", JSON.stringify(payload));
+        localStorage.setItem("vifems_current_workspace_id", payload.workspaceId);
+        sessionStorage.setItem("vifems_onboarded_workspace", JSON.stringify(payload));
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch { /* ignore */ }
     } catch {
       setProvError(true);
     }
@@ -192,10 +203,9 @@ export default function OnboardingPage() {
     <div className="ob-root">
       {/* ── Header ── */}
       <header className="ob-header">
-        <div className="ob-logo">
-          <span className="ob-logo-icon">V</span>
-          VifeMS
-        </div>
+        <Link href="/" className="ob-logo" style={{ textDecoration: "none" }}>
+          <VifeMSLogo theme="light" size="sm" />
+        </Link>
         <nav className="ob-steps" aria-label="Setup progress">
           <span className={stepN > 1 ? "done" : stepN === 1 ? "on" : ""}>
             <b />&nbsp;Describe
