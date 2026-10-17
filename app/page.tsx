@@ -29,9 +29,6 @@ import {
   Network,
   LayoutDashboard,
   Workflow,
-  BadgeCheck,
-  Eye,
-  ScrollText,
   Wrench,
   Truck,
   Briefcase,
@@ -40,6 +37,10 @@ import {
   Database,
   History,
 } from "lucide-react";
+
+const HERO_DURATIONS = [5200, 3800, 4600, 4200, 7200];
+const HERO_PROMPT =
+  "I run a retail shop. I need to manage products, stock, sales, customers, and bank-transfer payments.";
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -53,26 +54,12 @@ export default function LandingPage() {
   const [provStep, setProvStep] = useState(0); // 0 to 4
   const [appState, setAppState] = useState<"idle" | "wait" | "verify" | "ok">("idle");
 
-  // Tra-Sync state
-  const [tsStep, setTsStep] = useState(0);
+  // Tra-Sync state (3 stages: 0 = Awaiting, 1 = Verifying, 2 = Verified)
+  const [tsStage, setTsStage] = useState(0);
   const [tsPlaying, setTsPlaying] = useState(true);
 
   const heroVisibleRef = useRef(true);
   const tsVisibleRef = useRef(false);
-  const heroStepRef = useRef(0);
-  const heroPlayingRef = useRef(true);
-  const tsStepRef = useRef(0);
-  const tsPlayingRef = useRef(true);
-
-  heroStepRef.current = heroStep;
-  heroPlayingRef.current = heroPlaying;
-  tsStepRef.current = tsStep;
-  tsPlayingRef.current = tsPlaying;
-
-  const DURATIONS = [5200, 3800, 4600, 4200, 7200];
-  const FULL_PROMPT =
-    "I run a retail shop. I need to manage products, stock, sales, customers, and bank-transfer payments.";
-
   // Scroll listener
   useEffect(() => {
     const onScroll = () => {
@@ -136,14 +123,14 @@ export default function LandingPage() {
       sheetObserver.observe(heroSheet);
     }
 
-    const tsPanel = document.querySelector(".landing-root #ts");
+    const tsPanel = document.querySelector(".landing-root .ts-card");
     let tsObserver: IntersectionObserver | null = null;
     if (tsPanel) {
       tsObserver = new IntersectionObserver(
         (entries) => {
           tsVisibleRef.current = entries[0]?.isIntersecting ?? false;
         },
-        { threshold: 0.3 }
+        { threshold: 0.2 }
       );
       tsObserver.observe(tsPanel);
     }
@@ -164,7 +151,7 @@ export default function LandingPage() {
       timer = setTimeout(() => {
         if (!heroVisibleRef.current) return;
         setHeroStep((prev) => (prev + 1) % 5);
-      }, DURATIONS[heroStep]);
+      }, HERO_DURATIONS[heroStep]);
     }
 
     return () => clearTimeout(timer);
@@ -173,23 +160,27 @@ export default function LandingPage() {
   // Handle scene-specific hero animations
   useEffect(() => {
     let typingTimer: NodeJS.Timeout;
-    let provTimers: NodeJS.Timeout[] = [];
-    let appTimers: NodeJS.Timeout[] = [];
+    const provTimers: NodeJS.Timeout[] = [];
+    const appTimers: NodeJS.Timeout[] = [];
 
     if (heroStep === 0) {
-      setHeroTypedText("");
       let i = 0;
       const typeNext = () => {
         i += 1;
-        setHeroTypedText(FULL_PROMPT.slice(0, i));
-        if (i < FULL_PROMPT.length) {
+        setHeroTypedText(HERO_PROMPT.slice(0, i));
+        if (i < HERO_PROMPT.length) {
           typingTimer = setTimeout(typeNext, 30);
         }
       };
-      typingTimer = setTimeout(typeNext, 30);
+      typingTimer = setTimeout(() => {
+        setHeroTypedText("");
+        typeNext();
+      }, 30);
     } else if (heroStep === 3) {
-      setProvStep(0);
-      setProvDone(false);
+      provTimers.push(setTimeout(() => {
+        setProvStep(0);
+        setProvDone(false);
+      }, 0));
       for (let n = 1; n <= 4; n++) {
         provTimers.push(
           setTimeout(() => {
@@ -199,7 +190,7 @@ export default function LandingPage() {
         );
       }
     } else if (heroStep === 4) {
-      setAppState("idle");
+      appTimers.push(setTimeout(() => setAppState("idle"), 0));
       appTimers.push(
         setTimeout(() => {
           setAppState("wait");
@@ -224,51 +215,67 @@ export default function LandingPage() {
     };
   }, [heroStep]);
 
-  // Tra-Sync flow loop
+  // Tra-Sync flow loop (2800ms per stage)
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    if (tsPlaying) {
-      const waitTime = tsStep === 5 ? 3800 : 2400;
-      timer = setTimeout(() => {
-        if (tsVisibleRef.current) {
-          setTsStep((prev) => (prev + 1) % 6);
-        }
-      }, waitTime);
+    const isReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (isReduced) {
+      return;
     }
 
+    let timer: NodeJS.Timeout;
+    if (tsPlaying) {
+      timer = setTimeout(() => {
+        if (tsVisibleRef.current) {
+          setTsStage((prev) => (prev + 1) % 3);
+        }
+      }, 2800);
+    }
     return () => clearTimeout(timer);
-  }, [tsStep, tsPlaying]);
+  }, [tsStage, tsPlaying]);
 
-  const TS_STATES: ("wait" | "wait" | "verify" | "verify" | "ok" | "ok")[] = [
-    "wait",
-    "wait",
-    "verify",
-    "verify",
-    "ok",
-    "ok",
+  const TS_STAGES = [
+    {
+      label: "Awaiting payment",
+      tone: "amber" as const,
+      done: 1,
+      cells: [
+        { label: "Awaiting transfer", tone: "amber" as const },
+        { label: "Unchanged", tone: "mute" as const },
+        { label: "Not recorded yet", tone: "mute" as const },
+      ],
+    },
+    {
+      label: "Verifying",
+      tone: "blue" as const,
+      done: 3,
+      cells: [
+        { label: "Event received", tone: "blue" as const },
+        { label: "Unchanged", tone: "mute" as const },
+        { label: "Pending", tone: "mute" as const },
+      ],
+    },
+    {
+      label: "Verified",
+      tone: "green" as const,
+      done: 6,
+      cells: [
+        { label: "Verified", tone: "green" as const },
+        { label: "Stock updated", tone: "green" as const },
+        { label: "Recorded", tone: "green" as const },
+      ],
+    },
   ];
-  const currentTsState = TS_STATES[tsStep];
 
-  const RECEIPT_DATA = {
-    wait: {
-      prov: "Awaiting transfer",
-      inv: "Unchanged",
-      rec: "Not recorded yet",
-    },
-    verify: {
-      prov: "Verification in progress",
-      inv: "Unchanged",
-      rec: "Not recorded yet",
-    },
-    ok: {
-      prov: "Confirmed by provider",
-      inv: "Ankara tote bag 14 → 12",
-      rec: "Added to records",
-    },
-  };
+  const currentTsStageData = TS_STAGES[tsStage];
 
-  const receipt = RECEIPT_DATA[currentTsState];
+  const TS_TIMELINE_STEPS = [
+    { text: "An attendant creates a sale", actor: "Attendant" },
+    { text: "Customer pays by bank transfer", actor: "Customer" },
+    { text: "Proposed: provider sends a payment event", actor: "Provider" },
+    { text: "Proposed: Tra-Sync verifies the transaction", actor: "Tra-Sync" },
+    { text: "Proposed: sale and stock are updated", actor: "Tra-Sync" },
+    { text: "Proposed: owner sees the verified record", actor: "Owner" },
+  ];
 
   return (
     <div className="landing-root">
@@ -402,7 +409,7 @@ export default function LandingPage() {
               <div
                 className="steps"
                 id="steps"
-                style={{ "--dur": `${DURATIONS[heroStep]}ms` } as React.CSSProperties}
+                style={{ "--dur": `${HERO_DURATIONS[heroStep]}ms` } as React.CSSProperties}
               >
                 {[
                   "Describe",
@@ -435,13 +442,14 @@ export default function LandingPage() {
                 customers and payments. Third, those parts connect through relationships:
                 a sale links to a customer, line items link to products, and a payment
                 links to its sale. Fourth, the workspace is provisioned. Fifth, a sample
-                sale moves from awaiting payment to verified and stock updates.
+                animation depicts a proposed sale moving from awaiting payment to verified;
+                this flow is not connected to a payment provider.
               </p>
 
               <div
                 className="stage"
                 id="stage"
-                style={{ "--dur": `${DURATIONS[heroStep]}ms` } as React.CSSProperties}
+                style={{ "--dur": `${HERO_DURATIONS[heroStep]}ms` } as React.CSSProperties}
               >
                 {/* Scene 1: Describe */}
                 <div className={`scene ${heroStep === 0 ? "on" : ""}`} aria-hidden={heroStep !== 0}>
@@ -682,7 +690,7 @@ export default function LandingPage() {
             <div className="intro">
               <div>
                 <p className="eyebrow">The problem</p>
-                <h2 id="h-problem">Stop forcing your business into software that doesn't fit.</h2>
+                <h2 id="h-problem">Stop forcing your business into software that doesn&apos;t fit.</h2>
               </div>
               <p className="lede">VifeMS starts with your business, then builds the workspace around it.</p>
             </div>
@@ -690,7 +698,7 @@ export default function LandingPage() {
               <article className="prob rv">
                 <LockKeyhole size={26} strokeWidth={1.7} />
                 <h3>Rigid Systems</h3>
-                <p>Built around someone else's way of working.</p>
+                <p>Built around someone else&apos;s way of working.</p>
               </article>
               <article className="prob rv">
                 <Unplug size={26} strokeWidth={1.7} />
@@ -700,7 +708,7 @@ export default function LandingPage() {
               <article className="prob rv">
                 <Hourglass size={26} strokeWidth={1.7} />
                 <h3>Limited Technical Resources</h3>
-                <p>You know what you need. You can't build it.</p>
+                <p>You know what you need. You can&apos;t build it.</p>
               </article>
             </div>
           </div>
@@ -820,129 +828,158 @@ export default function LandingPage() {
         </section>
 
         {/* TRA-SYNC */}
-        <section className="sec ts" id="tra-sync" aria-labelledby="h-ts">
-          <div className="wrap">
-            <div className="ts-top">
-              <div className="ts-copy">
-                <p className="eyebrow">
-                  Introducing Tra-Sync <span className="tag" id="tsPreview">Preview</span>
-                </p>
-                <h2 id="h-ts">Know when a payment is verified. Without calling the owner.</h2>
-                <p>No more releasing goods on a screenshot. Tra-Sync ties payment verification to your sales workflow.</p>
-                <div className="cta-row">
-                  <a className="btn btn-primary" href="#tra-flow">
-                    Explore Tra-Sync <ArrowRight size={16} aria-hidden="true" />
-                  </a>
-                </div>
+        <section className="ts-section" id="tra-sync" aria-labelledby="h-ts">
+          <div className="ts-hero">
+            {/* LEFT: message */}
+            <div className="ts-copy">
+              <div className="ts-eyebrow">
+                <span className="label">Introducing Tra-Sync</span>
+                <span className="ts-badge">Preview</span>
               </div>
 
-              <div className="panel" id="ts" data-state={currentTsState}>
-                <div className="panel-h" id="tra-flow">
-                  <span className="badge">Illustrative flow</span>
-                  <button
-                    className={`ctl ${!tsPlaying ? "is-paused" : ""}`}
-                    id="tsPP"
-                    type="button"
-                    aria-label={tsPlaying ? "Pause the animation" : "Play the animation"}
-                    onClick={() => setTsPlaying(!tsPlaying)}
-                  >
-                    {tsPlaying ? (
-                      <>
-                        <Pause size={14} aria-hidden="true" />
-                        <span className="ctl-t">Pause</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} aria-hidden="true" />
-                        <span className="ctl-t">Play</span>
-                      </>
-                    )}
-                  </button>
+              <h2 id="h-ts">
+                A concept for payment verification. <span>Connected to your sales workflow.</span>
+              </h2>
+
+              <p className="ts-sub">
+                Tra-Sync is a preview of a future provider-backed flow. The current backend records payments manually and does not verify settlement.
+              </p>
+
+              <div>
+                <a className="ts-cta" href="#tra-sync">
+                  Explore Tra-Sync
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06101F" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </a>
+              </div>
+
+              <div className="ts-trust">
+                <div>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ADE9A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+                  Planned: server-side provider verification
                 </div>
-
-                <div className="states" aria-hidden="true">
-                  <span className={`s-wait ${currentTsState === "wait" ? "on" : ""}`}>
-                    Awaiting Payment
-                  </span>
-                  <span className={`s-verify ${currentTsState === "verify" ? "on" : ""}`}>
-                    Verifying
-                  </span>
-                  <span className={`s-ok ${currentTsState === "ok" ? "on" : ""}`}>
-                    Verified
-                  </span>
+                <div>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ADE9A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5v-9z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/></svg>
+                  Planned: stock updates after verified payment
                 </div>
-
-                <dl className="receipt" aria-live="polite">
-                  <dt>Sale</dt>
-                  <dd>S-0042 · ₦22,500</dd>
-                  <dt>Method</dt>
-                  <dd>Bank transfer</dd>
-                  <dt>Provider check</dt>
-                  <dd id="rProv">{receipt.prov}</dd>
-                  <dt>Inventory</dt>
-                  <dd id="rInv">{receipt.inv}</dd>
-                  <dt>Owner record</dt>
-                  <dd id="rRec">{receipt.rec}</dd>
-                </dl>
-
-                <ol className="flow" id="flow">
-                  {[
-                    "An attendant creates a sale",
-                    "Customer pays by bank transfer",
-                    "Provider sends a payment event",
-                    "Tra-Sync verifies the transaction",
-                    "Sale marked paid, stock updated",
-                    "Owner sees the verified record",
-                  ].map((stepText, idx) => {
-                    const isCur = tsStep === idx;
-                    const isPast = idx < tsStep;
-                    return (
-                      <li key={idx}>
-                        <button
-                          className={`fstep ${isCur ? "on" : ""} ${isPast ? "past" : ""}`}
-                          type="button"
-                          aria-current={isCur ? "step" : undefined}
-                          onClick={() => {
-                            setTsPlaying(false);
-                            setTsStep(idx);
-                          }}
-                        >
-                          <span className="n">{idx + 1}</span>
-                          <span>
-                            <b>{stepText}</b>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ol>
-                <p className="panel-note">
-                  Sample data. Only server-side provider verification marks a sale paid.
-                </p>
+                <div>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ADE9A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/></svg>
+                  Planned: verified sales appear in the owner&apos;s record
+                </div>
               </div>
             </div>
 
-            <div className="caps">
-              <article className="cap">
-                <span className="ibox"><BadgeCheck size={21} /></span>
-                <h3>Payment Verification</h3>
-                <p>Checked against your payment provider, not screenshots.</p>
-              </article>
-              <article className="cap">
-                <span className="ibox"><Receipt size={21} /></span>
-                <h3>Attendant Sales Workflow</h3>
-                <p>Attendants create sales and track payment status.</p>
-              </article>
-              <article className="cap">
-                <span className="ibox"><Eye size={21} /></span>
-                <h3>Owner Oversight</h3>
-                <p>See verified sales without waiting for a call.</p>
-              </article>
-              <article className="cap">
-                <span className="ibox"><ScrollText size={21} /></span>
-                <h3>Reliable Transaction Records</h3>
-                <p>Structured records for traceability and reconciliation.</p>
-              </article>
+            {/* RIGHT: live flow card */}
+            <div className="ts-card" aria-label="Illustrative payment verification flow">
+              <div className="ts-card-head">
+                <div className="title"><i></i>Illustrative flow</div>
+                <button
+                  className="ts-pause"
+                  type="button"
+                  onClick={() => setTsPlaying((p) => !p)}
+                  aria-label={tsPlaying ? "Pause verification flow" : "Play verification flow"}
+                >
+                  {tsPlaying ? (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#C9D4EC" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#C9D4EC" aria-hidden="true"><path d="M7 4.5v15a1 1 0 001.5.85l12-7.5a1 1 0 000-1.7l-12-7.5A1 1 0 007 4.5z"/></svg>
+                      <span>Play</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="ts-tabs">
+                {TS_STAGES.map((s, idx) => (
+                  <button
+                    key={idx}
+                    className="ts-tab"
+                    type="button"
+                    data-tone={s.tone}
+                    data-passed={idx < tsStage ? "true" : "false"}
+                    aria-pressed={idx === tsStage}
+                    onClick={() => {
+                      setTsStage(idx);
+                      setTsPlaying(false);
+                    }}
+                  >
+                    <i></i>
+                    {idx === 0 ? "Awaiting" : idx === 1 ? "Verifying" : "Verified"}
+                  </button>
+                ))}
+              </div>
+
+              <div className="ts-receipt">
+                <div className="ts-row">
+                  <span className="ts-sale-id">Sale S-0042</span>
+                  <span className="ts-pill" data-tone={currentTsStageData.tone}>
+                    <i></i>
+                    <span>{currentTsStageData.label}</span>
+                  </span>
+                </div>
+                <div className="ts-row" style={{ alignItems: "baseline" }}>
+                  <span className="ts-amount">₦22,500</span>
+                  <span className="ts-method">Bank transfer</span>
+                </div>
+                <div className="ts-cells">
+                  <div className="ts-cell">
+                    <span className="k">Provider check</span>
+                    <span className="v" data-tone={currentTsStageData.cells[0].tone}>
+                      <i></i>
+                      <span>{currentTsStageData.cells[0].label}</span>
+                    </span>
+                  </div>
+                  <div className="ts-cell">
+                    <span className="k">Inventory</span>
+                    <span className="v" data-tone={currentTsStageData.cells[1].tone}>
+                      <i></i>
+                      <span>{currentTsStageData.cells[1].label}</span>
+                    </span>
+                  </div>
+                  <div className="ts-cell">
+                    <span className="k">Owner record</span>
+                    <span className="v" data-tone={currentTsStageData.cells[2].tone}>
+                      <i></i>
+                      <span>{currentTsStageData.cells[2].label}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <ol className="ts-timeline">
+                {TS_TIMELINE_STEPS.map((step, idx) => {
+                  const isDone = idx < currentTsStageData.done;
+                  const isCurrent = idx === currentTsStageData.done;
+                  const stateAttr = isDone ? "done" : isCurrent ? "current" : "pending";
+                  const lineAttr = idx < currentTsStageData.done - 1 ? "done" : idx === currentTsStageData.done - 1 ? "lead" : "idle";
+
+                  return (
+                    <li key={idx} className="ts-step" data-state={stateAttr} data-line={lineAttr}>
+                      <div className="ts-rail">
+                        <div className="ts-dot">
+                          <b>{idx + 1}</b>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#04140C" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M5 12.5l4.5 4.5L19 7.5"/>
+                          </svg>
+                        </div>
+                        <div className="ts-line"></div>
+                      </div>
+                      <div className="ts-body">
+                        <span className="ts-name">{step.text}</span>
+                        <span className="ts-actor">{step.actor}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <div className="ts-note">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8FA0BF" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/></svg>
+                Sample data. Only server-side provider verification marks a sale paid.
+              </div>
             </div>
           </div>
         </section>
@@ -968,7 +1005,7 @@ export default function LandingPage() {
               />
               <div className="use-img-overlay">
                 <span className="use-img-quote">
-                  "I needed something built for the way I actually run my shop — not a one-size-fits-all template."
+                  &quot;I needed something built for the way I actually run my shop — not a one-size-fits-all template.&quot;
                 </span>
                 <span className="use-img-label">Real business owners. Real workflows.</span>
               </div>
@@ -1044,7 +1081,7 @@ export default function LandingPage() {
                 </ul>
               </div>
             </div>
-            <p className="closer">Your business should not have to fit someone else's idea of how business works.</p>
+            <p className="closer">Your business should not have to fit someone else&apos;s idea of how business works.</p>
           </div>
         </section>
 
@@ -1062,7 +1099,7 @@ export default function LandingPage() {
               <div>
                 <ShieldCheck size={30} strokeWidth={1.6} />
                 <h3>Controlled Workspace Access</h3>
-                <p>Users should only see what they're authorized to use.</p>
+                <p>Users should only see what they&apos;re authorized to use.</p>
               </div>
               <div>
                 <Database size={30} strokeWidth={1.6} />
@@ -1138,25 +1175,25 @@ export default function LandingPage() {
               <details>
                 <summary>Can VifeMS support different types of businesses?</summary>
                 <p>
-                  It's designed to. What's available depends on what the platform currently supports.
+                  It&apos;s designed to. What&apos;s available depends on what the platform currently supports.
                 </p>
               </details>
               <details>
                 <summary>What is Tra-Sync?</summary>
                 <p>
-                  VifeMS's payment verification capability. It links sales to verified payment records the owner can see.
+                  Tra-Sync is a concept preview for a future payment-verification flow; the current backend records payments manually.
                 </p>
               </details>
               <details>
                 <summary>Does Tra-Sync verify bank transfers?</summary>
                 <p>
-                  It's designed to verify supported payments through your payment provider. Screenshots alone are never proof.
+                  Provider-backed bank-transfer verification is not implemented yet. Screenshots are not verified by this preview.
                 </p>
               </details>
               <details>
                 <summary>Is VifeMS available now?</summary>
                 <p id="faqAvail">
-                  A showcase for the Devcenter x Rumpty Cloud Hacktober Sprint 2026. Items marked Preview aren't production-ready yet.
+                  A showcase for the Devcenter x Rumpty Cloud Hacktober Sprint 2026. Items marked Preview aren&apos;t production-ready yet.
                 </p>
               </details>
             </div>

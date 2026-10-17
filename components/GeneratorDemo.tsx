@@ -15,11 +15,15 @@ export function GeneratorDemo({ selectedExample }: GeneratorDemoProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [hasEnteredView, setHasEnteredView] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeModules, setActiveModules] = useState<string[]>(
-    selectedExample ? selectedExample.modules : DEFAULT_MODULES
-  );
-  const [selectedModules, setSelectedModules] = useState<Record<string, boolean>>({});
-  const [generatedSuccess, setGeneratedSuccess] = useState(true);
+  const exampleId = selectedExample?.id || "default";
+  const activeModules = selectedExample ? selectedExample.modules : DEFAULT_MODULES;
+  const [moduleSelection, setModuleSelection] = useState<{
+    exampleId: string;
+    selected: Record<string, boolean>;
+  }>({ exampleId, selected: {} });
+  const selectedModules = moduleSelection.exampleId === exampleId ? moduleSelection.selected : {};
+  const [generationState, setGenerationState] = useState({ exampleId, success: true });
+  const generatedSuccess = generationState.exampleId === exampleId ? generationState.success : true;
   const [displayedPlaceholder, setDisplayedPlaceholder] = useState("");
 
   // IntersectionObserver to detect when user scrolls down to this section
@@ -43,16 +47,10 @@ export function GeneratorDemo({ selectedExample }: GeneratorDemoProps) {
 
   // Typing effect triggered on scroll into view or template change
   useEffect(() => {
-    setActiveModules(selectedExample ? selectedExample.modules : DEFAULT_MODULES);
-    setSelectedModules({});
-    setGeneratedSuccess(true);
-
     if (!hasEnteredView) return;
 
     const targetText = selectedExample ? selectedExample.prompt : DEFAULT_PROMPT;
     let charIndex = 0;
-    setDisplayedPlaceholder("");
-
     const interval = setInterval(() => {
       if (charIndex < targetText.length) {
         setDisplayedPlaceholder(targetText.slice(0, charIndex + 1));
@@ -66,18 +64,23 @@ export function GeneratorDemo({ selectedExample }: GeneratorDemoProps) {
   }, [selectedExample, hasEnteredView]);
 
   const handleToggleModule = (moduleName: string) => {
-    setSelectedModules((prev) => ({
-      ...prev,
-      [moduleName]: !prev[moduleName],
-    }));
+    setModuleSelection((previous) => {
+      const selected = previous.exampleId === exampleId ? previous.selected : {};
+      return {
+        exampleId,
+        selected: { ...selected, [moduleName]: !selected[moduleName] },
+      };
+    });
   };
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    setGeneratedSuccess(false);
+    setGenerationState({ exampleId, success: false });
     setTimeout(() => {
       setIsGenerating(false);
-      setGeneratedSuccess(true);
+      setGenerationState((previous) => previous.exampleId === exampleId
+        ? { ...previous, success: true }
+        : previous);
     }, 850);
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface BusinessDescriptionStepProps {
   initialDescription: string;
@@ -28,15 +28,10 @@ export default function BusinessDescriptionStep({
   onSubmit,
   error,
 }: BusinessDescriptionStepProps) {
-  const [description, setDescription] = useState(initialDescription || "");
-
-  // Sync if parent restores a saved description after mount (sessionStorage hydration)
-  useEffect(() => {
-    if (initialDescription && !description) {
-      setDescription(initialDescription);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDescription]);
+  const [localDraft, setLocalDraft] = useState<{ initialValue: string; value: string } | null>(null);
+  const description = localDraft?.initialValue === initialDescription
+    ? localDraft.value
+    : initialDescription || "";
 
   const charCount = description.length;
   const trimLen = description.trim().length;
@@ -77,7 +72,7 @@ export default function BusinessDescriptionStep({
             aria-label="Business description"
             placeholder="Describe your business operations, what you sell or manage, and the daily records or workflows you want to organize..."
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => setLocalDraft({ initialValue: initialDescription, value: e.target.value })}
           />
           <div className="ob-meta">
             <span>{hint}</span>
@@ -101,7 +96,7 @@ export default function BusinessDescriptionStep({
             key={c.label}
             type="button"
             className="ob-chip"
-            onClick={() => setDescription(c.text)}
+            onClick={() => setLocalDraft({ initialValue: initialDescription, value: c.text })}
           >
             {c.label}
           </button>

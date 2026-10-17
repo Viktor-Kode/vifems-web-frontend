@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Google, ArrowLeft, Eye, EyeOff } from "@/components/Icons";
 import AuthMockupPanel from "@/components/AuthMockupPanel";
 import VifeMSLogo from "@/components/VifeMSLogo";
@@ -17,27 +17,24 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isLoadingSkeleton, setIsLoadingSkeleton] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const oauthError = searchParams.get("error");
+  const registered = searchParams.get("registered") === "true";
+  const visibleError = error || (oauthError
+    ? OAUTH_ERROR_MESSAGES[oauthError] || "Authentication failed. Please try again."
+    : null);
+  const visibleSuccessMessage = successMessage || (registered ? "Account created! Sign in to continue." : null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoadingSkeleton(false), 600);
-
-    const oauthError = searchParams.get("error");
-    const registered = searchParams.get("registered");
-
-    if (oauthError) {
-      setError(OAUTH_ERROR_MESSAGES[oauthError] || "Authentication failed. Please try again.");
-    } else if (registered === "true") {
-      setSuccessMessage("Account created! Sign in to continue.");
-    }
-
     return () => clearTimeout(timer);
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +58,7 @@ function LoginForm() {
         return;
       }
 
-      window.location.href = "/onboarding";
+      router.push("/dashboard");
     } catch {
       setError("Network error. Is the backend running?");
       setIsSubmitting(false);
@@ -69,7 +66,7 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/api/auth/google`;
+    window.location.replace(`${API_URL}/api/auth/google`);
   };
 
   return (
@@ -93,16 +90,16 @@ function LoginForm() {
       </div>
 
       {/* Success Banner */}
-      {successMessage && (
+      {visibleSuccessMessage && (
         <div className="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium">
-          {successMessage}
+          {visibleSuccessMessage}
         </div>
       )}
 
       {/* Error Banner */}
-      {error && (
+      {visibleError && (
         <div className="mb-4 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
-          {error}
+          {visibleError}
         </div>
       )}
 

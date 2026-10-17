@@ -15,8 +15,6 @@ export default function RelationshipPreview({
 }: RelationshipPreviewProps) {
   if (!relationships || relationships.length === 0) return null;
 
-  const entityMap = new Map(entities.map((e) => [e.id, e.name]));
-
   return (
     <div
       className="rounded-2xl p-5 mb-8 border"

@@ -161,12 +161,12 @@ export default function OnboardingPage() {
       setBlueprint(bp);
       setWorkspaceName(bp.workspaceName || "");
       setGenDone(true);
-    } catch (err: any) {
-      if (err?.status === 401) {
-        window.location.href = "/login";
+    } catch (error: unknown) {
+      if (error instanceof Error && "status" in error && error.status === 401) {
+        router.replace("/login");
         return;
       }
-      setGenErrorMessage(err?.message || "Failed to generate workspace blueprint. Your description has been preserved.");
+      setGenErrorMessage(error instanceof Error ? error.message : "Failed to generate workspace blueprint. Your description has been preserved.");
       setGenError(true);
       setStep("prompt");
     } finally {
@@ -195,12 +195,12 @@ export default function OnboardingPage() {
       try {
         sessionStorage.removeItem(STORAGE_KEY);
       } catch { /* ignore */ }
-    } catch (err: any) {
-      if (err?.status === 401) {
-        window.location.href = "/login";
+    } catch (error: unknown) {
+      if (error instanceof Error && "status" in error && error.status === 401) {
+        router.replace("/login");
         return;
       }
-      setProvErrorMessage(err?.message || "Failed to provision workspace. Your reviewed blueprint is saved. You can retry.");
+      setProvErrorMessage(error instanceof Error ? error.message : "Failed to provision workspace. Your reviewed blueprint is saved. You can retry.");
       setProvError(true);
     } finally {
       setIsSubmitting(false);
@@ -395,28 +395,6 @@ export default function OnboardingPage() {
               Here&apos;s what VifeAI set up. Rename or remove anything you don&apos;t need. You can change more later in Settings.
             </p>
 
-            {/* Relationship flow */}
-            <div className="flow" aria-label="Your records">
-              {(blueprint.relationships || []).length > 0
-                ? blueprint.relationships.map((r, i) => {
-                    const from = blueprint.entities.find((e) => e.id === r.fromEntityId)?.name || r.fromEntityId;
-                    const to   = blueprint.entities.find((e) => e.id === r.toEntityId)?.name   || r.toEntityId;
-                    return (
-                      <React.Fragment key={r.id || i}>
-                        <b>{from}</b>
-                        <span>→{r.label ? ` ${r.label} →` : ""}</span>
-                        <b>{to}</b>
-                        <span>&nbsp;&nbsp;</span>
-                      </React.Fragment>
-                    );
-                  })
-                : blueprint.entities.map((e, i) => (
-                    <React.Fragment key={e.id}>
-                      {i > 0 && <span>·</span>}
-                      <b>{e.name}</b>
-                    </React.Fragment>
-                  ))}
-            </div>
 
             {/* Entity grid */}
             <div className="grid">

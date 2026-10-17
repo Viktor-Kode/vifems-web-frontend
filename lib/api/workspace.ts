@@ -17,6 +17,7 @@ export type FieldBlueprint = {
   name: string;
   label?: string;
   type: FieldType;
+  typeLower?: string;
   required?: boolean;
   options?: string[];
   targetModule?: string;
@@ -84,37 +85,115 @@ export type WorkspaceModuleMeta = {
   views?: string[];
 };
 
+export type WorkspaceMetadata = {
+  id: string;
+  userId?: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  status?: string;
+  modules: WorkspaceModuleMeta[];
+};
+
+export type WorkspaceOverview = {
+  workspaceId: string;
+  workspaceName: string;
+  totalRecords: number;
+  moduleStats: Array<{
+    moduleId: string;
+    moduleSlug: string;
+    moduleName: string;
+    recordCount: number;
+  }>;
+  recentActivity: Array<{
+    recordId: string;
+    moduleId: string;
+    moduleSlug: string;
+    moduleName: string;
+    label: string;
+    action: string;
+    timestamp: string;
+  }>;
+};
+
+export type UserProfile = {
+  id: string;
+  fullName: string;
+  email: string;
+  createdAt?: string;
+};
+
+export type DynamicFieldValue = string | number | boolean | null;
+
 export type WorkspaceRecord = {
   id: string;
   workspace_id: string;
   created_at: string;
   updated_at: string;
-  data: Record<string, any>;
-  [key: string]: any;
+  data: Record<string, DynamicFieldValue>;
+  [key: string]: DynamicFieldValue | Record<string, DynamicFieldValue>;
 };
+
+export class ApiRequestError extends Error {
+  constructor(message: string, public readonly status: number, public readonly data?: unknown) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
+type ApiObject = Record<string, unknown>;
+
+function asObject(value: unknown): ApiObject {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as ApiObject)
+    : {};
+}
+
+function asString(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  return Array.isArray(value) && value.every((item) => typeof item === "string")
+    ? value
+    : undefined;
+}
+
+function makeRequestError(body: ApiObject, status: number, fallback: string): ApiRequestError {
+  return new ApiRequestError(asString(body.message, fallback), status, body);
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 /**
  * Normalizes backend blueprint structure to match frontend entities contract.
  */
-function normalizeBlueprint(data: any): Blueprint {
-  const bp = data?.blueprint || data?.data?.blueprint || data;
-  const generationId = data?.generationId || data?.data?.generationId || bp?.generationId;
+function normalizeBlueprint(input: unknown): Blueprint {
+  const root = asObject(input);
+  const responseData = asObject(root.data);
+  const bp = asObject(root.blueprint ?? responseData.blueprint ?? input);
+  const generationId = root.generationId ?? responseData.generationId ?? bp.generationId;
 
-  const rawEntities = bp?.entities || bp?.modules || [];
-  const entities: EntityBlueprint[] = rawEntities.map((e: any, idx: number) => {
-    const eSlug = e.slug || `mod_${idx + 1}`;
-    const eId = e.id || `ent_${eSlug}`;
+  const rawEntities = Array.isArray(bp.entities)
+    ? bp.entities
+    : Array.isArray(bp.modules)
+      ? bp.modules
+      : [];
+  const entities: EntityBlueprint[] = rawEntities.map((rawEntity, idx) => {
+    const entity = asObject(rawEntity);
+    const eSlug = asString(entity.slug, `mod_${idx + 1}`);
+    const eId = asString(entity.id, `ent_${eSlug}`);
+    const rawFields = Array.isArray(entity.fields) ? entity.fields : [];
 
     return {
       id: eId,
-      name: e.name || `Model ${idx + 1}`,
+      name: asString(entity.name, `Model ${idx + 1}`),
       slug: eSlug,
-      description: e.description || "",
-      fields: (e.fields || []).map((f: any, fIdx: number) => {
+      description: asString(entity.description, ""),
+      fields: rawFields.map((rawField, fIdx) => {
+        const field = asObject(rawField);
         let normType: FieldType = "Text";
-        const tLower = (f.typeLower || f.type || "").toLowerCase().trim().replace(/[\s-]+/g, "_");
+        const tLower = asString(field.typeLower ?? field.type, "").toLowerCase().trim().replace(/[\s-]+/g, "_");
         if (tLower === "long_text" || tLower === "textarea") normType = "Long text";
         else if (tLower === "datetime" || tLower === "date_time" || tLower === "timestamp") normType = "Date & Time";
         else if (tLower === "decimal" || tLower === "float") normType = "Decimal";
@@ -128,46 +207,56 @@ function normalizeBlueprint(data: any): Blueprint {
         else if (tLower === "phone") normType = "Phone";
 
         return {
-          id: f.id || `f_${idx + 1}_${fIdx + 1}`,
-          name: f.name || f.label || `field_${fIdx + 1}`,
-          label: f.label || f.name || `Field ${fIdx + 1}`,
+          id: asString(field.id, `f_${idx + 1}_${fIdx + 1}`),
+          name: asString(field.name ?? field.label, `field_${fIdx + 1}`),
+          label: asString(field.label ?? field.name, `Field ${fIdx + 1}`),
           type: normType,
-          required: Boolean(f.required),
-          options: f.options,
-          targetModule: f.targetModule || f.relatedEntityId,
-          targetField: f.targetField || "id",
-          relatedEntityId: f.relatedEntityId || f.targetModule,
-          exampleValue: f.exampleValue,
+          typeLower: tLower,
+          required: Boolean(field.required),
+          options: asStringArray(field.options),
+          targetModule: typeof (field.targetModule ?? field.relatedEntityId) === "string"
+            ? String(field.targetModule ?? field.relatedEntityId)
+            : undefined,
+          targetField: asString(field.targetField, "id"),
+          relatedEntityId: typeof (field.relatedEntityId ?? field.targetModule) === "string"
+            ? String(field.relatedEntityId ?? field.targetModule)
+            : undefined,
+          exampleValue: typeof field.exampleValue === "string" ? field.exampleValue : undefined,
         };
       }),
-      views: e.views || ["table", "form"],
+      views: asStringArray(entity.views) || ["table", "form"],
     };
   });
 
-  const relationships: BlueprintRelationship[] = (bp?.relationships || []).map((r: any, rIdx: number) => {
-    const fromId = r.fromEntityId || r.sourceModule || r.fromModule;
-    const toId = r.toEntityId || r.targetModule || r.toModule;
+  const rawRelationships = Array.isArray(bp.relationships) ? bp.relationships : [];
+  const relationships: BlueprintRelationship[] = rawRelationships.flatMap((rawRelationship, rIdx) => {
+    const relationship = asObject(rawRelationship);
+    const fromId = relationship.fromEntityId ?? relationship.sourceModule ?? relationship.fromModule;
+    const toId = relationship.toEntityId ?? relationship.targetModule ?? relationship.toModule;
+    if (typeof fromId !== "string" || typeof toId !== "string") return [];
     return {
-      id: r.id || `rel_${rIdx + 1}`,
-      name: r.name,
-      sourceModule: r.sourceModule,
-      sourceField: r.sourceField,
-      targetModule: r.targetModule,
-      targetField: r.targetField || "id",
-      cardinality: r.cardinality || "many-to-one",
-      required: Boolean(r.required),
+      id: asString(relationship.id, `rel_${rIdx + 1}`),
+      name: typeof relationship.name === "string" ? relationship.name : undefined,
+      sourceModule: typeof relationship.sourceModule === "string" ? relationship.sourceModule : undefined,
+      sourceField: typeof relationship.sourceField === "string" ? relationship.sourceField : undefined,
+      targetModule: typeof relationship.targetModule === "string" ? relationship.targetModule : undefined,
+      targetField: asString(relationship.targetField, "id"),
+      cardinality: relationship.cardinality === "one-to-many" || relationship.cardinality === "many-to-many"
+        ? relationship.cardinality
+        : "many-to-one",
+      required: Boolean(relationship.required),
       fromEntityId: fromId,
       toEntityId: toId,
-      label: r.label || "relates to",
+      label: asString(relationship.label, "relates to"),
     };
   });
 
   return {
-    workspaceName: bp?.workspaceName || bp?.name || "My Business Workspace",
-    description: bp?.description || "",
+    workspaceName: asString(bp.workspaceName ?? bp.name, "My Business Workspace"),
+    description: asString(bp.description, ""),
     entities,
     relationships,
-    generationId,
+    generationId: typeof generationId === "string" ? generationId : undefined,
   };
 }
 
@@ -183,13 +272,10 @@ export async function generateBlueprint(description: string): Promise<Blueprint>
     body: JSON.stringify({ description }),
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
 
   if (!res.ok) {
-    const errorMsg = body?.message || "Failed to generate workspace blueprint.";
-    const err = new Error(errorMsg);
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to generate workspace blueprint.");
   }
 
   return normalizeBlueprint(body);
@@ -205,10 +291,10 @@ export async function regenerateBlueprint(generationId: string): Promise<Bluepri
     credentials: "include",
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
 
   if (!res.ok) {
-    throw new Error(body?.message || "Failed to regenerate blueprint.");
+    throw makeRequestError(body, res.status, "Failed to regenerate blueprint.");
   }
 
   return normalizeBlueprint(body);
@@ -241,17 +327,15 @@ export async function provisionWorkspace(
     }),
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
 
   if (!res.ok) {
-    const errorMsg = body?.message || "Failed to provision workspace in database.";
-    const err = new Error(errorMsg);
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to provision workspace.");
   }
 
-  const workspaceId =
-    body.workspaceId || body.data?.workspaceId || body.data?.id;
+  const workspaceIdValue =
+    body.workspaceId || asObject(body.data).workspaceId || asObject(body.data).id;
+  const workspaceId = typeof workspaceIdValue === "string" ? workspaceIdValue : "";
 
   if (!workspaceId) {
     throw new Error("Provisioning succeeded but no workspace ID was returned.");
@@ -263,32 +347,54 @@ export async function provisionWorkspace(
 /**
  * Fetches workspace metadata including provisioned dynamic modules.
  */
-export async function getWorkspace(workspaceId: string): Promise<any> {
+export async function getWorkspace(workspaceId: string): Promise<WorkspaceMetadata> {
   const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}`, {
     method: "GET",
     credentials: "include",
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    throw new Error(body?.message || "Workspace not found.");
+    throw makeRequestError(body, res.status, "Workspace not found.");
   }
 
-  return body.data || body;
+  return (body.data || body) as WorkspaceMetadata;
+}
+
+/**
+ * Updates workspace properties (e.g. name / business name).
+ */
+export async function updateWorkspace(
+  workspaceId: string,
+  payload: { name: string }
+): Promise<WorkspaceMetadata> {
+  const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const body = asObject(await res.json().catch(() => ({})));
+  if (!res.ok) {
+    throw makeRequestError(body, res.status, "Failed to update workspace.");
+  }
+
+  return (body.data || body) as WorkspaceMetadata;
 }
 
 /**
  * Fetches user's list of workspaces.
  */
-export async function listWorkspaces(): Promise<any[]> {
+export async function listWorkspaces(): Promise<WorkspaceMetadata[]> {
   const res = await fetch(`${API_URL}/api/workspaces`, {
     method: "GET",
     credentials: "include",
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) return [];
-  return body.data || [];
+  return Array.isArray(body.data) ? body.data as WorkspaceMetadata[] : [];
 }
 
 /**
@@ -300,7 +406,7 @@ export async function fetchRecords(
   page = 1,
   limit = 50,
   search = ""
-): Promise<{ records: WorkspaceRecord[]; total: number; module?: any }> {
+): Promise<{ records: WorkspaceRecord[]; total: number; module?: WorkspaceModuleMeta }> {
   const query = new URLSearchParams({
     page: String(page),
     limit: String(limit),
@@ -317,17 +423,15 @@ export async function fetchRecords(
     }
   );
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to fetch module records.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to fetch module records.");
   }
 
   return {
-    records: body.data || [],
-    total: body.pagination?.total || 0,
-    module: body.module,
+    records: Array.isArray(body.data) ? body.data as WorkspaceRecord[] : [],
+    total: typeof asObject(body.pagination).total === "number" ? asObject(body.pagination).total as number : 0,
+    module: body.module ? body.module as WorkspaceModuleMeta : undefined,
   };
 }
 
@@ -337,7 +441,7 @@ export async function fetchRecords(
 export async function createRecord(
   workspaceId: string,
   moduleId: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<WorkspaceRecord> {
   const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/modules/${moduleId}/records`, {
     method: "POST",
@@ -346,14 +450,12 @@ export async function createRecord(
     body: JSON.stringify(data),
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to create record.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to create record.");
   }
 
-  return body.data || body;
+  return (body.data || body) as WorkspaceRecord;
 }
 
 /**
@@ -372,14 +474,12 @@ export async function getRecord(
     }
   );
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to retrieve record.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to retrieve record.");
   }
 
-  return body.data || body;
+  return (body.data || body) as WorkspaceRecord;
 }
 
 /**
@@ -389,7 +489,7 @@ export async function updateRecord(
   workspaceId: string,
   moduleId: string,
   recordId: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<WorkspaceRecord> {
   const res = await fetch(
     `${API_URL}/api/workspaces/${workspaceId}/modules/${moduleId}/records/${recordId}`,
@@ -401,14 +501,12 @@ export async function updateRecord(
     }
   );
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to update record.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to update record.");
   }
 
-  return body.data || body;
+  return (body.data || body) as WorkspaceRecord;
 }
 
 /**
@@ -427,50 +525,45 @@ export async function deleteRecord(
     }
   );
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to delete record.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to delete record.");
   }
 }
 
 /**
  * Retrieves schema-aware metrics and recent activity for a workspace.
  */
-export async function getWorkspaceOverview(workspaceId: string): Promise<any> {
+export async function getWorkspaceOverview(workspaceId: string): Promise<WorkspaceOverview> {
   const res = await fetch(`${API_URL}/api/workspaces/${workspaceId}/overview`, {
     method: "GET",
     credentials: "include",
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Failed to fetch workspace overview.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Failed to fetch workspace overview.");
   }
 
-  return body.data || body;
+  return (body.data || body) as WorkspaceOverview;
 }
 
 /**
  * Retrieves the currently authenticated user profile.
  */
-export async function getCurrentUser(): Promise<any> {
+export async function getCurrentUser(): Promise<UserProfile> {
   const res = await fetch(`${API_URL}/api/auth/me`, {
     method: "GET",
     credentials: "include",
   });
 
-  const body = await res.json().catch(() => ({}));
+  const body = asObject(await res.json().catch(() => ({})));
   if (!res.ok) {
-    const err = new Error(body?.message || "Authentication required.");
-    (err as any).status = res.status;
-    throw err;
+    throw makeRequestError(body, res.status, "Authentication required.");
   }
 
-  return body.data?.user || body.user;
+  const data = asObject(body.data);
+  return (data.user || body.user) as UserProfile;
 }
 
 /**

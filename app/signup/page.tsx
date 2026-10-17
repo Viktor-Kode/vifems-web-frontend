@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { User, Mail, Lock, Google, ArrowLeft, Eye, EyeOff } from "@/components/Icons";
 import AuthMockupPanel from "@/components/AuthMockupPanel";
 import VifeMSLogo from "@/components/VifeMSLogo";
@@ -9,6 +10,7 @@ import VifeMSLogo from "@/components/VifeMSLogo";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [isLoadingSkeleton, setIsLoadingSkeleton] = useState(true);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -72,10 +74,10 @@ export default function SignupPage() {
       });
 
       if (loginRes.ok) {
-        window.location.href = "/onboarding";
+        router.push("/onboarding");
       } else {
         // Registration worked but auto-login failed — send to login with success banner
-        window.location.href = "/login?registered=true";
+        router.push("/login?registered=true");
       }
     } catch {
       setError("Network error. Is the backend running?");
@@ -84,7 +86,7 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = `${API_URL}/api/auth/google`;
+    window.location.replace(`${API_URL}/api/auth/google`);
   };
 
   return (

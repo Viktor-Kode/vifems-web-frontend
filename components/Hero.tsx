@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { ArrowRight, Briefcase } from "@/components/Icons";
+import { ArrowRight } from "@/components/Icons";
 
 // ---------------------------------------------------------------------------
 // Animation data
@@ -189,7 +189,6 @@ function Connector({ d, active }: { d: string; active: boolean }) {
 // BusinessAnimation
 // ---------------------------------------------------------------------------
 function BusinessAnimation() {
-  const [bizIndex, setBizIndex] = useState(0);
   const [bubble, setBubble] = useState("");
   const [typing, setTyping] = useState(false);
   const [coreStatus, setCoreStatus] = useState("Listening\u2026");
@@ -205,6 +204,7 @@ function BusinessAnimation() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const runId = useRef(0);
+  const runAnimationRef = useRef<(index: number) => void>(() => undefined);
 
   // Recalculate connector paths
   const recalcPaths = useCallback(() => {
@@ -304,21 +304,18 @@ function BusinessAnimation() {
     setBubble("");
     if (id !== runId.current) return;
 
-    const next = (idx + 1) % BUSINESSES.length;
-    setBizIndex(next);
-    runAnimation(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const nextBusinessIndex = (idx + 1) % BUSINESSES.length;
+    runAnimationRef.current(nextBusinessIndex);
   }, [recalcPaths]);
 
   useEffect(() => {
-    runAnimation(0);
-    return () => { runId.current = -1; };
+    runAnimationRef.current = runAnimation;
+    const timer = setTimeout(() => runAnimationRef.current(0), 0);
+    return () => {
+      clearTimeout(timer);
+      runId.current = -1;
+    };
   }, [runAnimation]);
-
-  const handleChip = (i: number) => {
-    setBizIndex(i);
-    runAnimation(i);
-  };
 
   return (
     <div style={{ position: "relative", width: "100%" }}>

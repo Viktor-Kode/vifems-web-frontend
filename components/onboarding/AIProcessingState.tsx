@@ -34,7 +34,7 @@ export default function AIProcessingState({ onComplete, isReady }: AIProcessingS
     }, 900);
 
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (waitingForReady && isReady) {

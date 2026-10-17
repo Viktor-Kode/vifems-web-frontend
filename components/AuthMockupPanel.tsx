@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import VifeMSLogo from "@/components/VifeMSLogo";
-import { Sparkles } from "@/components/Icons";
 
 export default function AuthMockupPanel() {
   return (

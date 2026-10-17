@@ -42,7 +42,7 @@ export default function ProvisioningState({
     }, 800);
 
     return () => clearInterval(interval);
-  }, [hasError]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasError]);
 
   useEffect(() => {
     if (waitingForReady && isReady) {
