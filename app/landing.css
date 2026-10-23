@@ -26,9 +26,10 @@
   color: var(--ink);
   font-family: var(--ff);
   -webkit-font-smoothing: antialiased;
-  overflow-x: clip;
+  overflow-x: hidden;
   line-height: 1.5;
   background: #FFFFFF;
+  -webkit-overflow-scrolling: touch;
 }
 
 .landing-viewport * {
@@ -288,6 +289,8 @@
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   backdrop-filter: blur(18px) saturate(1.4);
   box-shadow: 0 8px 30px -12px rgba(11, 21, 51, .12);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .nav ul {
@@ -350,6 +353,8 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity .45s, visibility .45s;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 #menu.open {
@@ -2234,6 +2239,9 @@
   letter-spacing: .06em;
   color: #28345A;
   box-shadow: 0 20px 50px -20px rgba(11, 21, 51, .2);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .fchip i {
@@ -2267,6 +2275,8 @@
   gap: 36px;
   transition: transform .6s, border-color .5s;
   box-shadow: 0 24px 60px -46px rgba(11, 21, 51, .25);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 .uc:hover {

@@ -36,15 +36,20 @@ export default function LandingPage() {
         const Lenis = lenisModule.default || lenisModule;
 
         gsapInstance.registerPlugin(ScrollTriggerInstance);
-        ScrollTriggerInstance.config({ ignoreMobileResize: true });
+        ScrollTriggerInstance.config({ ignoreMobileResize: true, autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize" });
+
+        const isTouchOrIOS =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+          window.matchMedia("(pointer: coarse)").matches;
 
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const animate = !reduce;
         const root = document.documentElement;
         if (!animate) root.classList.add("static");
 
-        // Lenis Smooth Scroll
-        if (animate && Lenis) {
+        // Lenis Smooth Scroll only for desktop/pointer-fine devices to avoid iOS WebKit scroll locks
+        if (animate && Lenis && !isTouchOrIOS) {
           lenisInstance = new Lenis({
             duration: 1.15,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -954,6 +959,11 @@ export default function LandingPage() {
           });
 
           ScrollTriggerInstance.refresh();
+          if (isTouchOrIOS) {
+            setTimeout(() => {
+              ScrollTriggerInstance.refresh();
+            }, 500);
+          }
         }
 
         // Shop procedural background
