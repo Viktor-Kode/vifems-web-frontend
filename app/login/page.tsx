@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Google, ArrowLeft, Eye, EyeOff } from "@/components/Icons";
 import AuthMockupPanel from "@/components/AuthMockupPanel";
-import VifeMSLogo from "@/components/VifeMSLogo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -79,9 +78,6 @@ function LoginForm() {
           <ArrowLeft className="w-3.5 h-3.5 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
           <span>Back to Home</span>
         </Link>
-        <div className="lg:hidden">
-          <VifeMSLogo theme="light" size="sm" />
-        </div>
       </div>
 
       <div className="mb-8">

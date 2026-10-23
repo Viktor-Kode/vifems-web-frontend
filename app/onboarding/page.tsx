@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import VifeMSLogo from "@/components/VifeMSLogo";
 import { generateBlueprint, provisionWorkspace, Blueprint, EntityBlueprint } from "@/lib/api/workspace";
 import "./onboarding.css";
 
@@ -38,7 +37,6 @@ const CHIPS = [
   },
 ];
 
-/* ── Progress list component ── */
 function ProgList({
   labels,
   isApiDone,
@@ -51,33 +49,53 @@ function ProgList({
   const [current, setCurrent] = useState(0);
   const atEnd = current >= labels.length - 1;
 
-  // Advance one item every 1600ms; stop at last item and wait for isApiDone
+  // Advance one item every 1400ms; stop at last item and wait for isApiDone
   useEffect(() => {
     if (atEnd) return;
-    const t = setTimeout(() => setCurrent((p) => p + 1), 1600);
+    const t = setTimeout(() => setCurrent((p) => p + 1), 1400);
     return () => clearTimeout(t);
   }, [current, atEnd]);
 
   // Once at end and API done, fire completion
   useEffect(() => {
     if (!atEnd || !isApiDone) return;
-    const t = setTimeout(() => onAllDone(), 400);
+    const t = setTimeout(() => onAllDone(), 500);
     return () => clearTimeout(t);
   }, [atEnd, isApiDone, onAllDone]);
 
+  // Calculate clean progress percentage (caps at 94% until API returns done, then 100%)
+  const stepTarget = Math.round(((current + 1) / labels.length) * 92);
+  const progressPct = isApiDone ? 100 : Math.min(stepTarget, 94);
+
   return (
-    <ul className="prog" aria-live="polite">
-      {labels.map((label, i) => {
-        const isDone = i < current;
-        const isNow  = i === current;
-        return (
-          <li key={i} className={isDone ? "ok" : isNow ? "now" : ""}>
-            <span className="dot">{isDone ? "✓" : ""}</span>
-            <span>{label}</span>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="prog-container" aria-live="polite">
+      {/* Animated Clean Progress Bar */}
+      <div className="prog-bar-wrap">
+        <div className="prog-bar-meta">
+          <span>AI Generation in Progress</span>
+          <span className="prog-bar-pct">{progressPct}%</span>
+        </div>
+        <div className="prog-track" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100}>
+          <div
+            className="prog-fill"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </div>
+
+      <ul className="prog">
+        {labels.map((label, i) => {
+          const isDone = i < current || (isApiDone && i <= current);
+          const isNow  = i === current && !isDone;
+          return (
+            <li key={i} className={isDone ? "ok" : isNow ? "now" : ""}>
+              <span className="dot">{isDone ? "✓" : isNow ? "⋯" : ""}</span>
+              <span className="prog-txt">{label}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -291,9 +309,6 @@ export default function OnboardingPage() {
     <div className="ob-root">
       {/* ── Header ── */}
       <header className="ob-header">
-        <Link href="/" className="ob-logo" style={{ textDecoration: "none" }}>
-          <VifeMSLogo theme="light" size="sm" />
-        </Link>
         <nav className="ob-steps" aria-label="Setup progress">
           <span className={stepN > 1 ? "done" : stepN === 1 ? "on" : ""}>
             <b />&nbsp;Describe
