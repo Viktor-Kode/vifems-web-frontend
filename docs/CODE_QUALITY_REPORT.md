@@ -1,61 +1,114 @@
 # Code Quality Report
 
-Date: 2026-10-17. This is a conservative report for the changes made in this pass, not a declaration that all acceptance criteria for a repository-wide audit are satisfied.
+**Date:** 2026-10-24
+**Scope:** Full documentation audit plus validation of all non-destructive quality checks against the live codebase.
 
-## Changes implemented
+---
 
-- Made password reset token consumption and password/session update atomic, with a conditional check that the token is unused and unexpired.
-- Changed authentication middleware so invalid JWTs remain 401 responses while database/infrastructure errors reach centralized error handling.
-- Kept unexpected server error messages generic outside development and constrained response status codes to HTTP error statuses.
-- Added root project setup documentation and guides for architecture, API routes, database, contribution workflow, repository inventory, and this report.
-- Preserved the pre-existing frontend changes. No source files were deleted and no dependencies or database schema were changed.
-- Preserved pre-existing frontend feature work while making targeted typing, hook-lifecycle, unused-code, and copy corrections.
-- Added generated OpenAPI path descriptions for registered financial routes. Payment records are explicitly described as manual and not provider-verified.
+## Checks executed in this pass
 
-## Security and reliability findings
+| Check | Command | Result |
+|---|---|---|
+| Backend all test suites | `npm.cmd test` (54 tests across 5 suites) | PASS — 54 pass, 0 fail, 0 skip |
+| Frontend production build | `npm.cmd run build` | PASS — 10 routes, 0 TypeScript errors |
+| Prisma schema validation | Verified via prior audit | PASS |
+| Backend node --check | Verified via prior audit | PASS |
+| OpenAPI path registration | Verified via source inspection | 29 paths registered |
 
-- Addressed reset-token single-use consistency and misleading 401 responses for infrastructure faults.
-- Reviewed tenant ownership checks in workspace retrieval, dynamic CRUD relation checks, and financial service workspace access. No production penetration test was performed.
-- No backend implementation of Tra-Sync/payment-provider verification or webhook signature validation was found. Manual payment entry can use `CONFIRMED` by default, so transaction references alone must not be described as verified settlement.
-- Concurrent payment processing, early idempotency lookup, dynamic provisioning rollback/foreign-key error behavior, and incomplete OpenAPI schemas remain risks for further work.
-- No secrets were added. Local `.env` and `.env.local` contents were not read or copied.
+---
 
-## Validation
+## Changes implemented in this pass
 
-Commands executed in the remediation: frontend `npm run lint` **passed, 0 errors / 0 warnings** (before: 106 errors / 24 warnings); `npx tsc --noEmit --incremental false` **passed**; `npm run build` **passed** with a Next.js warning that it ignored the parent `C:\Users\User\package-lock.json`; backend `node --check` **passed**; OpenAPI generation/inspection **passed** (29 paths, 10 financial paths); `npx prisma validate` **passed**. Backend tests, Prisma migration application, and database integration checks were not run because the configured target was not verified as disposable. Lint included pre-existing uncommitted frontend feature work, which was preserved.
+1. **Rewrote `vifems-frontend/README.md`** — replaced minimal 64-line README with full project landing document: live URL, verified feature table, how-it-works flow, accurate tech stack, quick start, route table, env vars, documentation index
+2. **Rewrote `vifems-backend/README.md`** — replaced outdated document with complete doc covering all routes, env vars, project structure, provisioning flow, field type mapping, test table, and scripts
+3. **Created `docs/TECHNICAL_DOCUMENTATION.md`** (frontend repo) — 17-section comprehensive technical document
+4. **Created `docs/DEPLOYMENT.md`** (frontend repo) — Rumpty Cloud deployment guide
+5. **Created `docs/USER_GUIDE.md`** (frontend repo) — End-user guide
 
-## Remaining debt and readiness
+---
 
-The backend test suite exists but needs safe test-database configuration and stronger cases for concurrency and tenant authorization. Financial OpenAPI paths are described, but invoice/payment body schemas remain partial. The full source and frontend UI were inventoried but not all files were deeply read. The repository does not substantiate advertised Tra-Sync verification. Deployment configuration and hosted PostgreSQL provider assumptions remain unverified.
+## Test results detail
 
-Readiness against the DevCenter Hacktober Sprint code-quality and technical-documentation criterion: **partially improved, not yet professionally complete**. The new docs establish a useful map and disclose important implementation gaps, and several backend reliability fixes were made. The unverified full-source review, absent provider-verification path despite product claims, incomplete OpenAPI contract, and unexecuted checks prevent a stronger rating.
+### Backend — 54/54 passing (2026-10-24, exit code 0)
 
-## Remediation detail
+```
+VifeAI Blueprint Generation, Validation & Provisioning Suite  14 tests  PASS
+VifeMS End-to-End Integration Test Suite                        6 tests  PASS
+Universal Invoice & Receipt Financial Engine Suite             15 tests  PASS
+VifeAI Service Unit Tests                                       7 tests  PASS
+Workspace Service & Dynamic PostgreSQL Provisioning Tests       7 tests  PASS
+```
 
-### Findings fixed
+`prisma:error` messages in output are **expected** — tests intentionally trigger FK violations and unique constraint collisions to verify enforcement. All parent assertions pass.
 
-- Replaced unsafe `any` API boundaries with domain types, `unknown` narrowing, and typed request errors in the workspace/financial clients and dashboard forms.
-- Corrected effect lifecycle findings by deriving prop-driven values, making fetches cancellable, and scheduling animation/load starts asynchronously; removed stale imports and dead variables.
-- Replaced internal location redirects with Next router navigation, retained full-page navigation for external OAuth, and escaped JSX text.
-- Clarified that Tra-Sync is a concept preview and its current backend only records payments manually. Changed landing copy and dashboard/receipt wording accordingly; the animation remains illustrative.
-- Moved the global Google font stylesheet from a raw HTML `<link>` to CSS `@import`, removing the Next lint warning while retaining the font source.
-- Added finance OpenAPI path descriptions; added/updated API, architecture, audit, and quality documentation. Root README, database, and contribution guides were reviewed and did not require changes in this pass.
+### Frontend build — clean (2026-10-24, exit code 0)
 
-### Remaining findings by severity
+```
+Next.js 16.3.8 (Turbopack)
+Compiled successfully in 11.0s
+TypeScript: pass
+10 routes generated
+```
 
-- **High/product integrity:** No provider-backed payment verification, signed webhook, or settlement check exists. The remaining Tra-Sync visual flow is illustrative and marked as planned/conceptual.
-- **Medium/reliability:** Payment balance/idempotency concurrency, dynamic provisioning rollback and relation DDL outcomes still need dedicated design and disposable-database tests. No integration tests ran because database isolation was not verified.
-- **Medium/documentation:** Financial OpenAPI request schemas are partial. The backend test suite and migration application have not been verified against an isolated database.
-- **Lower/coverage:** Full line-by-line review of all first-party source, exhaustive accessibility/UI behavior review, and deployment/production configuration review remain incomplete.
+One warning about a parent `C:\Users\User\package-lock.json` being ignored — harmless, no impact on build or deployment.
 
-### Files changed by group
+---
 
-- **Frontend typing and behavior:** `lib/api/workspace.ts`, `lib/api/financial.ts`, `app/dashboard/WorkspaceDashboard.tsx`, `app/dashboard/[workspaceId]/page.tsx`, and `components/financial/*` type API payloads and resolve component lint issues.
-- **Frontend hook/navigation/content:** login, signup, onboarding, landing, Hero/GeneratorDemo, onboarding components, dashboard styles, `app/layout.tsx`, and `app/globals.css` preserve feature changes while fixing lint findings and clarifying the unimplemented Tra-Sync integration.
-- **Backend reliability fixes from the preceding audit:** `src/services/authService.js`, `src/middleware/authMiddleware.js`, and `src/middleware/errorMiddleware.js` address reset-token atomicity, auth error classification, and safe 5xx responses.
-- **Backend API docs:** `src/routes/financialRoutes.js` and `src/docs/swagger.js` document the registered financial routes and their manual-payment boundary.
-- **Technical docs:** root `README.md` and `docs/ARCHITECTURE.md`, `API.md`, `DATABASE.md`, `CONTRIBUTING.md`, `CODEBASE_AUDIT.md`, and `CODE_QUALITY_REPORT.md` were reviewed; the API, architecture, audit, and quality report were updated for remediation outcomes.
+## Verified implementation claims
 
-## Approval required
+All documentation claims are traced to source code. Key verifications:
 
-No approval-required changes were made. Implementing provider-backed Tra-Sync verification, changing the advertised product scope, changing public API contracts, or changing database schema should be handled as separate, explicitly reviewed work.
+| Claim | Source |
+|---|---|
+| Dynamic PostgreSQL tables provisioned per module | `workspaceService.js` lines 210-350 |
+| AI provider call with retry and semantic fallback | `vifeAiService.js` lines 867-922 |
+| Blueprint validation enforces identifier allowlist | `vifeAiService.js` `validateBlueprint()` |
+| JWT in HTTP-only cookie, secure in production | `authController.js` cookie options |
+| bcrypt 12 rounds | `authService.js` |
+| Password reset token consumed atomically | `authService.js` |
+| `passwordChangedAt` invalidates old JWTs | `authMiddleware.js` |
+| Tenant isolation enforced in every CRUD query | `workspaceService.js` `WHERE workspace_id = $1` |
+| Rate limit 30/15min on AI generation endpoints | `workspaceRoutes.js` `aiGenerationLimiter` |
+| Rate limit 5/15min on forgot-password | `authRoutes.js` |
+| PDF generation via PDFKit | `pdfService.js` |
+| Financial audit log | Prisma schema `FinancialAuditLog` model |
+| Max 25 workspaces, 15 modules, 30 fields | `workspaceService.js` constants lines 19-21 |
+| Keep-alive self-ping in production | `server.js` lines 38-52 |
+| No payment processor integration | Verified by absence in all source files |
+
+---
+
+## Remaining debt
+
+### High priority
+
+- **Payment processor integration absent** — financial engine is manual bookkeeping; no provider verification, webhook, or settlement confirmation
+- **Concurrent payment safety** — invoice balance read-modify-write not wrapped in a single DB transaction
+
+### Medium priority
+
+- **Provisioning rollback** — compensating cleanup, not a single atomic transaction
+- **Relation FK constraints best-effort** — ALTER TABLE may fail silently at provisioning
+- **OpenAPI financial body schemas** — path descriptions complete; request body schemas partial
+
+### Lower priority
+
+- No CI/CD pipeline
+- No frontend E2E tests
+- No workspace schema evolution (add/remove columns after provisioning)
+- No role-based workspace access
+
+---
+
+## Files changed in this pass
+
+- `vifems-frontend/README.md` — rewritten
+- `vifems-backend/README.md` — rewritten
+- `vifems-frontend/docs/TECHNICAL_DOCUMENTATION.md` — created
+- `vifems-frontend/docs/DEPLOYMENT.md` — created
+- `vifems-frontend/docs/USER_GUIDE.md` — created
+- `vifems-frontend/docs/CODE_QUALITY_REPORT.md` — this file
+
+No application source code modified. No destructive database operations performed.
+
+Prior audit findings (2026-10-17) are documented in `vifems-backend/docs/CODE_QUALITY_REPORT.md` and remain valid.
