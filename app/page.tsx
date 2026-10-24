@@ -43,10 +43,15 @@ export default function LandingPage() {
           (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
           window.matchMedia("(pointer: coarse)").matches;
 
+        const isMobileScreen = typeof window !== "undefined" && window.innerWidth <= 768;
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const animate = !reduce;
+        // On mobile, completely turn off scroll animation scripts; render clean static landing page
+        const animate = !reduce && !isMobileScreen;
         const root = document.documentElement;
-        if (!animate) root.classList.add("static");
+        if (!animate) {
+          root.classList.add("static");
+          root.classList.add("mobile-static");
+        }
 
         // Lenis Smooth Scroll only for desktop/pointer-fine devices to avoid iOS WebKit scroll locks
         if (animate && Lenis && !isTouchOrIOS) {

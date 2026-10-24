@@ -2828,22 +2828,118 @@ footer {
   .orb .lbl { display: none; }
 }
 
-/* Mobile Animation & Backdrop Override (<= 768px) */
+/* ========================================================
+   Mobile Static Landing Page Overrides (<= 768px)
+   - Removes broken sticky/fixed pin stacks
+   - Hides trasync section & dashboard display on mobile
+   - Provides clean CSS fly-in/flow-in entry animations
+   ======================================================== */
 @media (max-width: 768px) {
-  [data-reveal],
-  .reveal,
-  .fade-up,
-  .animate-on-scroll,
-  .cine-text .eyebrow,
-  .cine-title,
-  .cine-sub,
-  .cine-cta,
-  .cine-note,
-  .panel,
-  .band .r1,
-  .band .r2,
-  .pline,
-  #cineDash {
+  /* Hide TraSync section entirely on mobile */
+  #trasync,
+  .trasync,
+  a[href="#trasync"] {
+    display: none !important;
+  }
+
+  /* Hide Dashboard display section on mobile */
+  #cineDash,
+  .cine-dash,
+  .stage,
+  .rail {
+    display: none !important;
+  }
+
+  /* Unpin #cine and make it natural static vertical flow */
+  #cine {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 100px 0 60px !important;
+  }
+
+  #cinePin {
+    position: static !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .cine-center {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+  }
+
+  .cine-text {
+    position: static !important;
+    inset: auto !important;
+    display: flex !important;
+    max-width: 100% !important;
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 0 16px !important;
+    animation: mobileFlyIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  }
+
+  /* Orbit items: hide background clutter on mobile */
+  #orbitPeople,
+  #orbitIcons,
+  .orb,
+  .iorb,
+  #scrollcue {
+    display: none !important;
+  }
+
+  /* How-it-works panels: make normal stacked cards, unpin */
+  .how {
+    height: auto !important;
+    padding: 60px 0 !important;
+  }
+
+  .pin-fill {
+    padding: 0 !important;
+  }
+
+  .panel {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    margin-bottom: 24px !important;
+    padding: 24px !important;
+  }
+
+  /* Clean flow-in fly-in animations for section items on mobile */
+  @keyframes mobileFlyIn {
+    0% {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Flow in entry for visible cards and headings */
+  .cine-title {
+    animation: mobileFlyIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both !important;
+  }
+
+  .cine-sub {
+    animation: mobileFlyIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both !important;
+  }
+
+  .cine-cta {
+    animation: mobileFlyIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both !important;
+  }
+
+  .card,
+  .uc,
+  .qi {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
