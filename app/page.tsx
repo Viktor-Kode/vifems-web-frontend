@@ -6,1056 +6,16 @@ import "./landing.css";
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [loaderHidden, setLoaderHidden] = useState(false);
-  const [loaderPct, setLoaderPct] = useState("000");
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeTsStep, setActiveTsStep] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    let gsapInstance: any = null;
-    let ScrollTriggerInstance: any = null;
-    let lenisInstance: any = null;
-    let isCleanedUp = false;
-
-    // Mobile screen check (< 768px): completely skip heavy JS animation libs, loader wait, and orbit creation
-    const isMobileDevice =
-      typeof window !== "undefined" &&
-      (window.innerWidth <= 768 ||
-        /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
-
-    if (isMobileDevice) {
-      setLoaderHidden(true);
-      document.documentElement.classList.add("static", "mobile-static");
-      return;
-    }
-
-    // Loader percentage simulation
-    let pct = 0;
-    const interval = setInterval(() => {
-      pct = Math.min(100, pct + Math.ceil(Math.random() * 9));
-      setLoaderPct(("000" + pct).slice(-3));
-      if (pct >= 100) clearInterval(interval);
-    }, 90);
-
-    const initAnimation = async () => {
-      try {
-        const gsapModule = await import("gsap");
-        const stModule = await import("gsap/ScrollTrigger");
-        const lenisModule = await import("lenis");
-
-        if (isCleanedUp) return;
-
-        gsapInstance = gsapModule.gsap || gsapModule.default;
-        ScrollTriggerInstance = stModule.ScrollTrigger || stModule.default;
-        const Lenis = lenisModule.default || lenisModule;
-
-        gsapInstance.registerPlugin(ScrollTriggerInstance);
-        ScrollTriggerInstance.config({ ignoreMobileResize: true, autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize" });
-
-        const isTouchOrIOS =
-          /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
-          window.matchMedia("(pointer: coarse)").matches;
-
-        const isMobileScreen = typeof window !== "undefined" && window.innerWidth <= 768;
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        // On mobile, completely turn off scroll animation scripts; render clean static landing page
-        const animate = !reduce && !isMobileScreen;
-        const root = document.documentElement;
-        if (!animate) {
-          root.classList.add("static");
-          root.classList.add("mobile-static");
-        }
-
-        // Lenis Smooth Scroll only for desktop/pointer-fine devices to avoid iOS WebKit scroll locks
-        if (animate && Lenis && !isTouchOrIOS) {
-          lenisInstance = new Lenis({
-            duration: 1.15,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            smoothWheel: true,
-          });
-          lenisInstance.on("scroll", ScrollTriggerInstance.update);
-          gsapInstance.ticker.add((t: number) => {
-            if (lenisInstance) lenisInstance.raf(t * 1000);
-          });
-          gsapInstance.ticker.lagSmoothing(0);
-        }
-
-        const $ = (s: string, c?: Element | Document) => (c || document).querySelector(s);
-        const $$ = (s: string, c?: Element | Document) =>
-          Array.prototype.slice.call((c || document).querySelectorAll(s));
-
-        // Nav show/hide & solid state
-        const top_ = $("#top");
-        let lastY = 0;
-        const onScrollNav = () => {
-          const y = window.scrollY;
-          if (top_) {
-            top_.classList.toggle("solid", y > 40);
-            if (y > lastY + 6 && y > 200) top_.classList.add("hide");
-            else if (y < lastY - 6 || y < 200) top_.classList.remove("hide");
-          }
-          lastY = y;
-        };
-        window.addEventListener("scroll", onScrollNav, { passive: true });
-
-        // Cursor ring
-          const ring = $("#ring") as HTMLElement | null;
-        if (ring && window.matchMedia("(pointer:fine)").matches) {
-          let x = 0, y = 0, tx = 0, ty = 0;
-          const onMouseMove = (e: MouseEvent) => {
-            tx = e.clientX;
-            ty = e.clientY;
-            ring.classList.add("on");
-          };
-          const onMouseLeave = () => ring.classList.remove("on");
-          window.addEventListener("mousemove", onMouseMove);
-          document.addEventListener("mouseleave", onMouseLeave);
-
-          let rafId = requestAnimationFrame(function loop() {
-            x += (tx - x) * 0.18;
-            y += (ty - y) * 0.18;
-            ring.style.transform = `translate(${x}px,${y}px)`;
-            rafId = requestAnimationFrame(loop);
-          });
-
-          const onMouseOver = (e: MouseEvent) => {
-            const target = e.target as HTMLElement | null;
-            ring.classList.toggle(
-              "big",
-              !!target?.closest("a,button,.card,.uc,.orb,.iorb")
-            );
-          };
-          document.addEventListener("mouseover", onMouseOver);
-        }
-
-        // Spotlight effect on cards
-        $$(".card").forEach((c: HTMLElement) => {
-          c.addEventListener("mousemove", (e: MouseEvent) => {
-            const r = c.getBoundingClientRect();
-            c.style.setProperty("--mx", e.clientX - r.left + "px");
-            c.style.setProperty("--my", e.clientY - r.top + "px");
-          });
-        });
-
-        // FAQ accordion
-        $$(".qi").forEach((item: HTMLElement) => {
-          const q = $(".q", item);
-          if (q) {
-            q.addEventListener("click", () => {
-              const open = item.classList.contains("open");
-              $$(".qi.open").forEach((o: HTMLElement) => {
-                o.classList.remove("open");
-                $(".q", o)?.setAttribute("aria-expanded", "false");
-              });
-              if (!open) {
-                item.classList.add("open");
-                q.setAttribute("aria-expanded", "true");
-              }
-              setTimeout(() => {
-                ScrollTriggerInstance.refresh();
-              }, 620);
-            });
-          }
-        });
-
-        // Orbit Setup
-        const peopleData = [
-          { sym: "p1", label: "Shop owner", ang: -160, r: 1.05 },
-          { sym: "p2", label: "Attendant", ang: -125, r: 1.0 },
-          { sym: "p3", label: "Customer", ang: -52, r: 1.0 },
-          { sym: "p4", label: "Supplier", ang: -18, r: 1.12 },
-          { sym: "p5", label: "Courier", ang: 18, r: 1.02 },
-          { sym: "p6", label: "Manager", ang: 52, r: 1.0 },
-          { sym: "p7", label: "Accountant", ang: 140, r: 1.02 },
-          { sym: "p8", label: "Cashier", ang: 172, r: 1.14 },
-        ];
-        const iconsData = [
-          { sym: "i-pkg", ang: -158, r: 1.04 },
-          { sym: "i-receipt", ang: -122, r: 1.0 },
-          { sym: "i-card", ang: -55, r: 1.0 },
-          { sym: "i-users", ang: -16, r: 1.1 },
-          { sym: "i-grid", ang: 16, r: 1.04 },
-          { sym: "i-chart", ang: 54, r: 1.0 },
-          { sym: "i-truck", ang: 124, r: 1.0 },
-          { sym: "i-shield", ang: 160, r: 1.08 },
-        ];
-
-        const orbitPeople = $("#orbitPeople");
-        const orbitIcons = $("#orbitIcons");
-
-        function placeOrbit(container: HTMLElement | null, data: any[], type: "p" | "i") {
-          if (!container) return [];
-          const els: any[] = [];
-          data.forEach((d) => {
-            const wrap = document.createElement("div");
-            wrap.className = type === "p" ? "orb" : "iorb";
-            const inner = document.createElement("div");
-            inner.className = type === "p" ? "pp" : "ib";
-            if (type === "p") {
-              const lbl = document.createElement("span");
-              lbl.className = "lbl";
-              lbl.textContent = d.label;
-              inner.style.overflow = "visible";
-              inner.innerHTML = `<span style="display:block;width:100%;height:100%;border-radius:50%;overflow:hidden"><svg viewBox="0 0 100 100" style="width:100%;height:100%;display:block"><use href="#${d.sym}"/></svg></span>`;
-              inner.appendChild(lbl);
-              wrap.appendChild(inner);
-            } else {
-              inner.innerHTML = `<svg class="ic"><use href="#${d.sym}"/></svg>`;
-              wrap.appendChild(inner);
-            }
-            container.appendChild(wrap);
-            gsapInstance.set(wrap, { xPercent: -50, yPercent: -50 });
-            els.push({ el: wrap, inner, ang: d.ang, r: d.r, w: 60, h: 60, hidden: false });
-          });
-          return els;
-        }
-
-        const peopleEls = placeOrbit(orbitPeople as HTMLElement, peopleData, "p");
-        const iconEls = placeOrbit(orbitIcons as HTMLElement, iconsData, "i");
-
-        function measureText() {
-          const textEl = $("#cineText") as HTMLElement | null;
-          const title = $(".cine-title") as HTMLElement | null;
-          let h = 0;
-          if (textEl) {
-            Array.prototype.forEach.call(textEl.children, (c: HTMLElement) => {
-              const cs = getComputedStyle(c);
-              h += c.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
-            });
-          }
-          let w = 0;
-          try {
-            if (title) {
-              const rg = document.createRange();
-              rg.selectNodeContents(title);
-              w = rg.getBoundingClientRect().width;
-            }
-          } catch (e) {}
-          w = Math.max(w, Math.min(textEl?.offsetWidth || 0, 460));
-          w = Math.min(w, textEl?.offsetWidth || w);
-          return { w, h };
-        }
-
-        function layoutOrbit(els: any[], avoidW: number, avoidH: number, W: number, H: number, pad: number) {
-          const placed: any[] = [];
-          const narrow = W < 900;
-          els.forEach((o) => {
-            const hw = o.w / 2;
-            const hh = o.h / 2;
-            let found = false;
-            const minX = -W / 2 + hw + 12;
-            const maxX = W / 2 - hw - 12;
-            const minY = -H / 2 + (narrow ? 80 : 92) + hh;
-            const maxY = H / 2 - (narrow ? 56 : 76) - hh;
-            const jit = [0, 10, -10, 20, -20, 32, -32, 46, -46];
-            for (let s = 1; s <= 2.4 && !found; s += 0.07) {
-              for (let j = 0; j < jit.length && !found; j++) {
-                const a = ((o.ang + jit[j]) * Math.PI) / 180;
-                const x = Math.cos(a) * (avoidW / 2 + pad + hw) * o.r * s;
-                const y = Math.sin(a) * (avoidH / 2 + pad + hh) * o.r * s;
-                if (x < minX || x > maxX || y < minY || y > maxY) continue;
-                if (Math.abs(x) < avoidW / 2 + pad + hw && Math.abs(y) < avoidH / 2 + pad + hh) continue;
-                const clash = placed.some(
-                  (p) => Math.abs(p.x - x) < p.hw + hw + 14 && Math.abs(p.y - y) < p.hh + hh + 14
-                );
-                if (clash) continue;
-                found = true;
-                placed.push({ x, y, hw, hh });
-                o.el.style.left = W / 2 + x + "px";
-                o.el.style.top = H / 2 + y + "px";
-              }
-            }
-            o.hidden = !found;
-            o.el.style.display = found ? "" : "none";
-          });
-        }
-
-        function layoutAll() {
-          const pin = $("#cinePin") as HTMLElement | null;
-          if (!pin) return;
-          const W = pin.offsetWidth;
-          const H = pin.offsetHeight;
-          if (!W || !H) return;
-          const narrow = W < 900;
-          const tiny = W <= 520;
-          const pSize = narrow ? 52 : 74;
-          const iSize = narrow ? 44 : 56;
-          const pad = narrow ? 16 : 44;
-
-          peopleEls.forEach((o) => {
-            o.w = Math.max(pSize, tiny ? pSize : pSize + 34);
-            o.h = pSize + (tiny ? 0 : 34);
-          });
-          iconEls.forEach((o) => {
-            o.w = iSize;
-            o.h = iSize;
-          });
-
-          const t = measureText();
-          const dash = $(".dash") as HTMLElement | null;
-          const dw = dash ? dash.offsetWidth : 0;
-          const dh = dash ? dash.offsetHeight : 0;
-
-          layoutOrbit(peopleEls, t.w, t.h, W, H, pad);
-          layoutOrbit(iconEls, Math.max(dw, 200), Math.max(dh, 200), W, H, pad);
-        }
-
-        if (animate) {
-          layoutAll();
-          window.addEventListener("resize", layoutAll);
-          if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(layoutAll);
-          }
-        }
-
-        function split(el: HTMLElement, mode: "mask" | "plain") {
-          const out: HTMLElement[] = [];
-          function walk(node: Node, cls: string) {
-            Array.prototype.slice.call(node.childNodes).forEach((n: Node) => {
-              if (n.nodeType === 3) {
-                const frag = document.createDocumentFragment();
-                (n.textContent || "").split(/(\s+)/).forEach((p) => {
-                  if (!p) return;
-                  if (/^\s+$/.test(p)) {
-                    frag.appendChild(document.createTextNode(" "));
-                    return;
-                  }
-                  const w = document.createElement("span");
-                  w.className = mode === "mask" ? "w" : "sw";
-                  const i = document.createElement("span");
-                  i.className = "wi" + (cls ? " " + cls : "");
-                  i.textContent = p;
-                  w.appendChild(i);
-                  frag.appendChild(w);
-                  out.push(i);
-                });
-                n.parentNode?.replaceChild(frag, n);
-              } else if (n.nodeType === 1 && (n as HTMLElement).tagName !== "BR") {
-                const elem = n as HTMLElement;
-                walk(n, ((cls ? cls + " " : "") + elem.className).trim());
-                const kids = Array.prototype.slice.call(n.childNodes);
-                kids.forEach((k) => n.parentNode?.insertBefore(k, n));
-                n.parentNode?.removeChild(n);
-              }
-            });
-          }
-          walk(el, "");
-          return out;
-        }
-
-        function intro() {
-          if (!animate) return;
-          const title = $(".cine-title") as HTMLElement | null;
-          const titleWords = title ? split(title, "mask") : [];
-          layoutAll();
-          gsapInstance.set(titleWords, { yPercent: 118 });
-          gsapInstance.set([".cine-text .eyebrow", ".cine-sub", ".cine-cta", ".cine-note"], {
-            opacity: 0,
-            y: 26,
-          });
-          const ppIn = peopleEls.map((o) => o.inner);
-          gsapInstance.set(ppIn, { opacity: 0, scale: 0.4 });
-
-          const tl = gsapInstance.timeline({ defaults: { ease: "power4.out" } });
-          tl.to(".cine-text .eyebrow", { opacity: 1, y: 0, duration: 1 }, 0.2)
-            .to(titleWords, { yPercent: 0, duration: 1.4, stagger: 0.09 }, 0.3)
-            .to([".cine-sub", ".cine-cta", ".cine-note"], { opacity: 1, y: 0, duration: 1.1, stagger: 0.1 }, 0.8)
-            .to(ppIn, { opacity: 1, scale: 1, duration: 1.4, ease: "power3.out", stagger: { each: 0.08, from: "random" } }, 0.5);
-        }
-
-        // Hide Loader
-        const loader = $("#loader");
-        setTimeout(() => {
-          if (loader) {
-            gsapInstance.to(loader, {
-              yPercent: -100,
-              duration: 1.1,
-              ease: "power4.inOut",
-              onStart: intro,
-              onComplete: () => setLoaderHidden(true),
-            });
-          } else {
-            intro();
-          }
-        }, 1400);
-
-        // Pinned Hero Animation
-        function startCineScroll() {
-          const cine = $("#cine");
-          const textEl = $("#cineText");
-          const dashEl = $("#cineDash");
-          const scrollcue = $("#scrollcue");
-
-          peopleEls.forEach((o) => {
-            const a = (o.ang * Math.PI) / 180;
-            o.flyX = Math.cos(a) * (220 + Math.random() * 140);
-            o.flyY = Math.sin(a) * (160 + Math.random() * 120);
-            o.rot = Math.random() * 40 - 20;
-          });
-
-          const cineTl = gsapInstance.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: cine,
-              start: "top top",
-              end: "+=150%",
-              pin: "#cinePin",
-              scrub: 0.6,
-              anticipatePin: 1,
-              refreshPriority: 3,
-              invalidateOnRefresh: true,
-            },
-          });
-
-          cineTl.fromTo(textEl, { opacity: 1, y: 0, scale: 1 }, { opacity: 0, y: -80, scale: 0.94, duration: 0.9 }, 0);
-          cineTl.fromTo(scrollcue, { opacity: 1, y: 0 }, { opacity: 0, y: 20, duration: 0.4 }, 0);
-
-          peopleEls.forEach((o, i) => {
-            cineTl.fromTo(
-              o.el,
-              { opacity: 1, x: 0, y: 0, rotate: 0 },
-              { opacity: 0, x: o.flyX, y: o.flyY, rotate: o.rot, duration: 0.9 },
-              i * 0.015
-            );
-          });
-
-          cineTl.fromTo(dashEl, { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 1 }, 0.45);
-
-          iconEls.forEach((o, i) => {
-            cineTl.fromTo(
-              o.el,
-              { opacity: 0, scale: 0.2, rotate: -25 },
-              { opacity: 1, scale: 1, rotate: 0, duration: 1, ease: "power3.out" },
-              0.6 + i * 0.025
-            );
-          });
-          cineTl.to({}, { duration: 0.4 }, "+=0.1");
-
-          const iconFloat: any[] = [];
-          const peopleFloat: any[] = [];
-          iconEls.forEach((o, i) => {
-            iconFloat.push(
-              gsapInstance.to(o.inner, {
-                x: "+=" + Math.cos(i * 1.3) * 8,
-                y: "+=" + Math.sin(i * 1.7) * 10,
-                duration: 4 + i * 0.3,
-                yoyo: true,
-                repeat: -1,
-                ease: "sine.inOut",
-                paused: true,
-              })
-            );
-          });
-          peopleEls.forEach((o, i) => {
-            peopleFloat.push(
-              gsapInstance.to(o.inner, {
-                x: "+=" + Math.cos(i * 0.9) * 7,
-                y: "+=" + Math.sin(i * 1.4) * 9,
-                duration: 4.5 + i * 0.4,
-                yoyo: true,
-                repeat: -1,
-                ease: "sine.inOut",
-              })
-            );
-          });
-
-          ScrollTriggerInstance.create({
-            trigger: cine,
-            start: "top top",
-            end: "bottom bottom",
-            onUpdate: (self: any) => {
-              const inS2 = self.progress > 0.55;
-              const inS1 = self.progress < 0.35;
-              iconFloat.forEach((t) => {
-                if (inS2 && t.paused()) t.play();
-                else if (!inS2 && !t.paused()) t.pause();
-              });
-              peopleFloat.forEach((t) => {
-                if (inS1 && t.paused()) t.play();
-                else if (!inS1 && !t.paused()) t.pause();
-              });
-            },
-          });
-        }
-
-        // How it works
-        function initHow() {
-          const panels = $$(".panel");
-          const nodes = $$(".st");
-          gsapInstance.set(panels, { autoAlpha: 0, y: 50 });
-          gsapInstance.set(panels[0], { autoAlpha: 1, y: 0 });
-
-          function setHow(i: number) {
-            nodes.forEach((n: HTMLElement, k: number) => {
-              n.classList.toggle("on", k <= i);
-              n.classList.toggle("cur", k === i);
-            });
-          }
-          setHow(0);
-
-          const howTl = gsapInstance.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: ".how-pin",
-              start: "top top",
-              end: "+=340%",
-              pin: true,
-              scrub: 0.6,
-              anticipatePin: 1,
-              refreshPriority: 2,
-              onUpdate: (s: any) => {
-                setHow(Math.min(3, Math.floor(s.progress * 4)));
-              },
-            },
-          });
-
-          howTl.to("#railFill", { width: "75%", duration: 3 }, 0);
-          for (let i = 1; i < 4; i++) {
-            howTl
-              .to(panels[i - 1], { autoAlpha: 0, y: -50, duration: 0.35 }, i - 0.32)
-              .fromTo(panels[i], { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35 }, i - 0.08);
-          }
-          howTl.to({}, { duration: 0.6 }, 3.4);
-        }
-
-        // TraSync
-        function initTraSync() {
-          if (!$("#tsStage")) return;
-          const s1 = $("#tsS1");
-          const s2 = $("#tsS2");
-          const s3 = $("#tsS3");
-          const typeAmt = $("#typeAmt");
-          const progs = $$("#tsProgress span");
-          const keys = $$("#tsS1 .key");
-          const okKey = $("#tsS1 .key.ok");
-          const keyBy: Record<string, HTMLElement> = {};
-          keys.forEach((k: HTMLElement) => {
-            keyBy[k.textContent?.trim() || ""] = k;
-          });
-          const digits = "22500";
-          const fmt = (d: string) => d.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-          let typed = -1;
-          let lastStep = -1;
-          let lastOk: boolean | null = null;
-          const state = { p: 0 };
-
-          function render() {
-            const p = state.p;
-            const n = Math.round(Math.min(1, p / 0.34) * digits.length);
-            if (n !== typed && typeAmt) {
-              typed = n;
-              typeAmt.textContent = n ? fmt(digits.slice(0, n)) : "0";
-              keys.forEach((k: HTMLElement) => k.classList.remove("press"));
-              if (n > 0 && p < 0.34 + 0.001 && n <= digits.length) {
-                const k = keyBy[digits.charAt(n - 1)];
-                if (k && p < 0.34) k.classList.add("press");
-              }
-            }
-            const sendOn = p >= 0.34 && p < 0.43;
-            if (sendOn !== lastOk && okKey) {
-              lastOk = sendOn;
-              okKey.classList.toggle("press", sendOn);
-              if (sendOn) {
-                keys.forEach((k: HTMLElement) => {
-                  if (k !== okKey) k.classList.remove("press");
-                });
-              }
-            }
-            const step = p < 0.43 ? 0 : p < 0.7 ? 1 : 2;
-            if (step !== lastStep) {
-              lastStep = step;
-              progs.forEach((el: HTMLElement, i: number) => {
-                el.classList.toggle("on", i === step);
-              });
-            }
-          }
-
-          gsapInstance.set(s1, { opacity: 1, y: 0, scale: 1 });
-          gsapInstance.set([s2, s3], { opacity: 0, y: 40, scale: 0.96 });
-
-          const tl = gsapInstance.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: "#trasync",
-              start: "top top",
-              end: "+=240%",
-              pin: ".ts-pin",
-              scrub: 0.5,
-              anticipatePin: 1,
-              refreshPriority: 1,
-              invalidateOnRefresh: true,
-            },
-          });
-
-          tl.to(state, { p: 1, duration: 1, onUpdate: render }, 0);
-          tl.to(s1, { opacity: 0, y: -36, scale: 0.96, duration: 0.06 }, 0.4);
-          tl.fromTo(s2, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.06, immediateRender: false }, 0.47);
-          tl.to(s2, { opacity: 0, y: -36, scale: 0.96, duration: 0.06 }, 0.68);
-          tl.fromTo(s3, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.06, immediateRender: false }, 0.75);
-
-          render();
-        }
-
-        if (animate) {
-          startCineScroll();
-          initHow();
-          initTraSync();
-
-          ScrollTriggerInstance.create({
-            trigger: document.body,
-            start: "top top",
-            end: "bottom bottom",
-            onUpdate: (s: any) => {
-              gsapInstance.set("#progress", { scaleX: s.progress });
-            },
-          });
-
-          gsapInstance
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger: document.body,
-                start: "top top",
-                end: "bottom bottom",
-                scrub: 1.6,
-              },
-            })
-            .fromTo(".b1", { x: "78vw", y: "4vh" }, { x: "12vw", y: "92vh" }, 0)
-            .fromTo(".b2", { x: "8vw", y: "86vh" }, { x: "86vw", y: "12vh" }, 0)
-            .fromTo(".b3", { x: "48vw", y: "-10vh" }, { x: "40vw", y: "104vh" }, 0)
-            .fromTo("#bg .grid", { backgroundPosition: "0px 0px" }, { backgroundPosition: "0px -900px" }, 0);
-
-          const r1 = $(".band .r1") as HTMLElement | null;
-          const r2 = $(".band .r2") as HTMLElement | null;
-          if (r1) {
-            gsapInstance.fromTo(
-              r1,
-              { x: "4vw" },
-              {
-                x: () => -(r1.scrollWidth - window.innerWidth * 0.7),
-                ease: "none",
-                scrollTrigger: {
-                  trigger: ".band",
-                  start: "top bottom",
-                  end: "bottom top",
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-              }
-            );
-          }
-          if (r2) {
-            gsapInstance.fromTo(
-              r2,
-              { x: () => -(r2.scrollWidth - window.innerWidth * 0.9) },
-              {
-                x: "0vw",
-                ease: "none",
-                scrollTrigger: {
-                  trigger: ".band",
-                  start: "top bottom",
-                  end: "bottom top",
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-              }
-            );
-          }
-
-          $$("[data-split]").forEach((h: HTMLElement) => {
-            const ws = split(h, "mask");
-            gsapInstance.from(ws, {
-              yPercent: 118,
-              duration: 1.25,
-              ease: "power4.out",
-              stagger: 0.045,
-              scrollTrigger: {
-                trigger: h,
-                start: "top 86%",
-                toggleActions: "play none none reverse",
-              },
-            });
-          });
-
-          $$("[data-scrub]").forEach((h: HTMLElement) => {
-            const ws = split(h, "plain");
-            gsapInstance.fromTo(
-              ws,
-              { opacity: 0.14 },
-              {
-                opacity: 1,
-                stagger: 0.12,
-                ease: "none",
-                scrollTrigger: {
-                  trigger: h,
-                  start: "top 82%",
-                  end: "bottom 48%",
-                  scrub: true,
-                },
-              }
-            );
-          });
-
-          $$("[data-reveal]").forEach((el: HTMLElement) => {
-            if (window.innerWidth < 768) {
-              gsapInstance.set(el, { opacity: 1, y: 0, clearProps: "transform" });
-              return;
-            }
-            gsapInstance.from(el, {
-              y: 40,
-              opacity: 0,
-              duration: 1.1,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: el,
-                start: "top 90%",
-                toggleActions: "play none none reverse",
-              },
-            });
-          });
-
-          $$("[data-speed]").forEach((el: HTMLElement) => {
-            const s = parseFloat(el.dataset.speed || "0") * 260;
-            gsapInstance.fromTo(
-              el,
-              { y: s },
-              {
-                y: -s,
-                ease: "none",
-                scrollTrigger: {
-                  trigger: el,
-                  start: "top bottom",
-                  end: "bottom top",
-                  scrub: true,
-                },
-              }
-            );
-          });
-
-          $$(".pline").forEach((l: HTMLElement, i: number) => {
-            gsapInstance.from(l, {
-              scaleX: 0,
-              duration: 1.4,
-              ease: "power3.out",
-              delay: i * 0.1,
-              scrollTrigger: {
-                trigger: l,
-                start: "top 92%",
-                toggleActions: "play none none reverse",
-              },
-            });
-          });
-
-          gsapInstance.from("#fgrid .card", {
-            y: 90,
-            opacity: 0,
-            scale: 0.95,
-            duration: 1.2,
-            ease: "power3.out",
-            stagger: 0.12,
-            scrollTrigger: {
-              trigger: "#fgrid",
-              start: "top 82%",
-              toggleActions: "play none none reverse",
-            },
-          });
-
-          gsapInstance.fromTo(
-            "#shop",
-            { clipPath: "inset(16% 14% 16% 14% round 56px)" },
-            {
-              clipPath: "inset(0% 0% 0% 0% round 28px)",
-              ease: "none",
-              scrollTrigger: {
-                trigger: "#shop",
-                start: "top 98%",
-                end: "top 22%",
-                scrub: true,
-              },
-            }
-          );
-          gsapInstance.fromTo(
-            "#shopBack",
-            { yPercent: -7 },
-            {
-              yPercent: 7,
-              ease: "none",
-              scrollTrigger: { trigger: "#shop", start: "top bottom", end: "bottom top", scrub: true },
-            }
-          );
-          gsapInstance.fromTo(
-            "#shopFront",
-            { yPercent: -16 },
-            {
-              yPercent: 16,
-              ease: "none",
-              scrollTrigger: { trigger: "#shop", start: "top bottom", end: "bottom top", scrub: true },
-            }
-          );
-          gsapInstance.fromTo(
-            ".fchip.a",
-            { y: 60 },
-            {
-              y: -60,
-              ease: "none",
-              scrollTrigger: { trigger: "#shop", start: "top bottom", end: "bottom top", scrub: true },
-            }
-          );
-          gsapInstance.fromTo(
-            ".fchip.b",
-            { y: 90 },
-            {
-              y: -90,
-              ease: "none",
-              scrollTrigger: { trigger: "#shop", start: "top bottom", end: "bottom top", scrub: true },
-            }
-          );
-          gsapInstance.from("#ucs .uc", {
-            y: 70,
-            opacity: 0,
-            duration: 1.1,
-            ease: "power3.out",
-            stagger: 0.1,
-            scrollTrigger: {
-              trigger: "#ucs",
-              start: "top 88%",
-              toggleActions: "play none none reverse",
-            },
-          });
-
-          gsapInstance
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger: "#vsGrid",
-                start: "top 78%",
-                end: "bottom 45%",
-                scrub: true,
-              },
-            })
-            .fromTo(".vs-old", { opacity: 1, scale: 1 }, { opacity: 0.42, scale: 0.96 }, 0)
-            .fromTo(".vs-new", { scale: 0.97, y: 30 }, { scale: 1.015, y: -10 }, 0)
-            .from(".vs-new li", { opacity: 0.25, x: -18, stagger: 0.18 }, 0);
-
-          gsapInstance.from("#srows .srow", {
-            y: 50,
-            opacity: 0,
-            duration: 1,
-            ease: "power3.out",
-            stagger: 0.14,
-            scrollTrigger: {
-              trigger: "#srows",
-              start: "top 86%",
-              toggleActions: "play none none reverse",
-            },
-          });
-          gsapInstance.from(".shield", {
-            scale: 0.7,
-            opacity: 0,
-            rotate: -20,
-            duration: 1.6,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: ".shield",
-              start: "top 88%",
-              toggleActions: "play none none reverse",
-            },
-          });
-
-          gsapInstance.fromTo(
-            "#ctaBox",
-            { scale: 0.93, y: 60 },
-            {
-              scale: 1,
-              y: 0,
-              ease: "none",
-              scrollTrigger: {
-                trigger: "#ctaBox",
-                start: "top 98%",
-                end: "top 40%",
-                scrub: true,
-              },
-            }
-          );
-          gsapInstance.set(".branch path", { strokeDasharray: 1, strokeDashoffset: 1 });
-          gsapInstance
-            .timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger: "#ctaBox",
-                start: "top 75%",
-                end: "bottom 70%",
-                scrub: true,
-              },
-            })
-            .to("#brIn path", { strokeDashoffset: 0, stagger: 0.08, duration: 0.6 }, 0)
-            .to("#brOut path", { strokeDashoffset: 0, stagger: 0.08, duration: 0.6 }, 0.5);
-
-          gsapInstance.from("#faqList .qi", {
-            y: 40,
-            opacity: 0,
-            duration: 0.9,
-            ease: "power3.out",
-            stagger: 0.07,
-            scrollTrigger: {
-              trigger: "#faqList",
-              start: "top 88%",
-              toggleActions: "play none none reverse",
-            },
-          });
-          gsapInstance.fromTo(
-            "#wordmark",
-            { yPercent: 38, opacity: 0.2 },
-            {
-              yPercent: 0,
-              opacity: 1,
-              ease: "none",
-              scrollTrigger: {
-                trigger: "footer",
-                start: "top 90%",
-                end: "bottom bottom",
-                scrub: true,
-              },
-            }
-          );
-
-          const T = [
-            { bg: "255,255,255", b1: "37,99,235", b2: "6,182,212", b3: "29,78,216" },
-            { bg: "249,250,253", b1: "79,70,229", b2: "37,99,235", b3: "30,41,120" },
-            { bg: "253,254,255", b1: "37,99,235", b2: "6,182,212", b3: "56,189,248" },
-            { bg: "249,251,255", b1: "99,102,241", b2: "37,99,235", b3: "6,182,212" },
-            { bg: "245,252,255", b1: "6,182,212", b2: "20,184,166", b3: "37,99,235" },
-            { bg: "253,251,248", b1: "217,119,6", b2: "37,99,235", b3: "120,53,15" },
-            { bg: "249,250,255", b1: "37,99,235", b2: "29,78,216", b3: "6,182,212" },
-            { bg: "245,251,255", b1: "6,182,212", b2: "37,99,235", b3: "14,116,144" },
-            { bg: "247,250,255", b1: "37,99,235", b2: "99,102,241", b3: "6,182,212" },
-            { bg: "255,255,255", b1: "37,99,235", b2: "6,182,212", b3: "29,78,216" },
-          ];
-          const rgb = (s: string) => "rgb(" + s + ")";
-          const vars = (t: any) => ({
-            "--bgc": rgb(t.bg),
-            "--b1": rgb(t.b1),
-            "--b2": rgb(t.b2),
-            "--b3": rgb(t.b3),
-          });
-
-          gsapInstance.set(root, vars(T[0]));
-          let prev = 0;
-          $$("[data-theme]").forEach((sec: HTMLElement, k: number) => {
-            const i = +(sec.dataset.theme || 0);
-            if (k > 0 && i !== prev) {
-              gsapInstance.fromTo(
-                root,
-                vars(T[prev]),
-                Object.assign({}, vars(T[i]), {
-                  ease: "none",
-                  immediateRender: false,
-                  scrollTrigger: {
-                    trigger: sec,
-                    start: "top 88%",
-                    end: "top 22%",
-                    scrub: true,
-                  },
-                })
-              );
-            }
-            prev = i;
-          });
-
-          const dotLinks = $$("#dots a");
-          const setDot = (id: string) => {
-            dotLinks.forEach((d: HTMLElement) => {
-              d.classList.toggle("on", d.getAttribute("href") === "#" + id);
-            });
-          };
-
-          ["cine", "problem", "how", "features", "trasync", "usecases", "why", "security"].forEach((id) => {
-            ScrollTriggerInstance.create({
-              trigger: "#" + id,
-              start: "top 55%",
-              end: "bottom 55%",
-              onToggle: (s: any) => {
-                if (s.isActive) setDot(id);
-              },
-            });
-          });
-
-          ScrollTriggerInstance.refresh();
-          if (isTouchOrIOS) {
-            setTimeout(() => {
-              ScrollTriggerInstance.refresh();
-            }, 500);
-          }
-        }
-
-        // Shop procedural background
-        function rnd(seed: number) {
-          let s = seed;
-          return () => {
-            s = (s * 9301 + 49297) % 233280;
-            return s / 233280;
-          };
-        }
-        function scene(seed: number, rows: number, blur: number, dark: boolean) {
-          const r = rnd(seed);
-          const W = 1400;
-          const H = 800;
-          let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">`;
-          svg += `<defs><linearGradient id="wl${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5F2ED"/><stop offset="1" stop-color="#EDE8E0"/></linearGradient><filter id="bl${seed}"><feGaussianBlur stdDeviation="${blur}"/></filter></defs>`;
-          if (!dark)
-            svg += `<rect width="${W}" height="${H}" fill="url(#wl${seed})"/><radialGradient id="gl${seed}" cx=".7" cy=".3" r=".7"><stop offset="0" stop-color="#f59e0b" stop-opacity=".15"/><stop offset="1" stop-color="#f59e0b" stop-opacity="0"/></radialGradient><rect width="${W}" height="${H}" fill="url(#gl${seed})"/>`;
-          svg += `<g filter="url(#bl${seed})">`;
-          const cols = ["#c8a06a", "#e4cfa3", "#9c6b3c", "#b88a55", "#efe3c8", "#7a4e2a", "#d9b27a"];
-          for (let i = 0; i < rows; i++) {
-            let y = (H / (rows + 0.4)) * (i + 1) + (dark ? 40 : 0);
-            let x = -20 + r() * 40;
-            while (x < W + 40) {
-              const w = (dark ? 90 : 46) + r() * (dark ? 120 : 60);
-              const h = (dark ? 150 : 70) + r() * (dark ? 170 : 90);
-              const c = cols[Math.floor(r() * cols.length)];
-              const t = r();
-              if (t < 0.55) {
-                svg += `<rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="${w * 0.14}" fill="${c}" opacity="${dark ? 0.9 : 0.85}"/>`;
-                if (!dark)
-                  svg += `<rect x="${x + w * 0.14}" y="${y - h * 0.62}" width="${w * 0.72}" height="${h * 0.32}" rx="3" fill="#2a1a0e" opacity=".25"/>`;
-              } else if (t < 0.85) {
-                svg += `<rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="${w * 0.3}" fill="${c}" opacity=".8"/><rect x="${x + w * 0.22}" y="${y - h - 10}" width="${w * 0.56}" height="12" rx="3" fill="#5a3a1c"/>`;
-              } else {
-                svg += `<path d="M${x} ${y} L${x + w * 0.1} ${y - h * 0.85} L${x + w * 0.9} ${y - h * 0.85} L${x + w} ${y} Z" fill="${c}" opacity=".85"/>`;
-              }
-              x += w + (dark ? 60 : 14) + r() * (dark ? 120 : 30);
-            }
-            if (!dark)
-              svg += `<rect x="0" y="${y}" width="${W}" height="14" fill="#c8b89e"/><rect x="0" y="${y + 14}" width="${W}" height="10" fill="#000" opacity=".12"/>`;
-          }
-          svg += "</g></svg>";
-          return svg;
-        }
-
-        const b = $("#shopBack");
-        const f = $("#shopFront");
-        if (b) b.innerHTML = scene(7, 4, 0.6, false);
-        if (f) {
-          f.innerHTML = scene(19, 1, 14, true);
-          (f as HTMLElement).style.opacity = ".35";
-        }
-      } catch (err) {
-        console.error("Animation init error", err);
-      }
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 30);
     };
-
-    initAnimation();
-
-    return () => {
-      isCleanedUp = true;
-      clearInterval(interval);
-      if (lenisInstance) {
-        lenisInstance.destroy();
-      }
-      if (ScrollTriggerInstance) {
-        ScrollTriggerInstance.getAll().forEach((t: any) => t.kill());
-      }
-    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
@@ -1255,35 +215,11 @@ export default function LandingPage() {
         </symbol>
       </svg>
 
-      {/* Loader */}
-      {!loaderHidden && (
-        <div id="loader" aria-hidden="true">
-          <div className="lc">
-            <span className="logo">
-              <b>VifeMS</b>
-            </span>
-            <div className="bar">
-              <i />
-            </div>
-            <div className="pct" id="pct">
-              {loaderPct}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div id="progress" />
-      <div id="bg">
-        <div className="blob b1" />
-        <div className="blob b2" />
-        <div className="blob b3" />
-        <div className="grid" />
-        <div className="grain" />
-      </div>
-      <div className="ring" id="ring" />
+      {/* Clean Background */}
+      <div id="bg" />
 
       {/* Top Navbar */}
-      <header id="top">
+      <header id="top" className={scrolled ? "solid" : ""}>
         <div className="nav">
           <Link href="#cine" className="logo" aria-label="VifeMS home">
             <b>VifeMS</b>
@@ -1917,119 +853,134 @@ export default function LandingPage() {
                     </span>
                   </div>
                   <div className="ts-progress" id="tsProgress">
-                    <span data-step="0" className="on">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTsStep(0)}
+                      className={activeTsStep === 0 ? "on" : ""}
+                    >
                       1 · Enter
-                    </span>
-                    <span data-step="1">2 · Awaiting</span>
-                    <span data-step="2" className="ok">
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTsStep(1)}
+                      className={activeTsStep === 1 ? "on" : ""}
+                    >
+                      2 · Awaiting
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTsStep(2)}
+                      className={`ok ${activeTsStep === 2 ? "on" : ""}`}
+                    >
                       3 · Verified
-                    </span>
+                    </button>
                   </div>
                 </div>
 
                 <div className="ts-stage" id="tsStage">
-                  {/* SCENE 1: attendant typing 22,500 */}
-                  <div className="ts-scene ts-s1" id="tsS1">
-                    <div className="top">
-                      <span className="tag-blue">
+                  {activeTsStep === 0 && (
+                    <div className="ts-scene ts-s1" id="tsS1">
+                      <div className="top">
+                        <span className="tag-blue">
+                          <i />
+                          New sale · attendant
+                        </span>
+                        <span className="brand">Tra-Sync</span>
+                      </div>
+                      <div className="who">
+                        <span className="av">
+                          <svg viewBox="0 0 100 100">
+                            <use href="#p2" />
+                          </svg>
+                        </span>
+                        <div className="meta">
+                          <small>Entered by</small>
+                          <b>Ada · Attendant</b>
+                        </div>
+                      </div>
+                      <div className="display-amt">
+                        <div className="cur">₦</div>
+                        <div className="val">
+                          <span id="typeAmt">22,500</span>
+                          <span className="caret" />
+                        </div>
+                      </div>
+                      <div className="keypad" aria-hidden="true">
+                        <div className="key">1</div>
+                        <div className="key">2</div>
+                        <div className="key">3</div>
+                        <div className="key">4</div>
+                        <div className="key">5</div>
+                        <div className="key">6</div>
+                        <div className="key">7</div>
+                        <div className="key">8</div>
+                        <div className="key">9</div>
+                        <div className="key op">.</div>
+                        <div className="key">0</div>
+                        <div className="key ok">↵</div>
+                      </div>
+                      <div className="hint">
                         <i />
-                        New sale · attendant
-                      </span>
-                      <span className="brand">Tra-Sync</span>
-                    </div>
-                    <div className="who">
-                      <span className="av">
-                        <svg viewBox="0 0 100 100">
-                          <use href="#p2" />
-                        </svg>
-                      </span>
-                      <div className="meta">
-                        <small>Entered by</small>
-                        <b>Ada · Attendant</b>
+                        Type the amount · then send
                       </div>
                     </div>
-                    <div className="display-amt">
-                      <div className="cur">₦</div>
-                      <div className="val">
-                        <span id="typeAmt">0</span>
-                        <span className="caret" />
+                  )}
+                  {activeTsStep === 1 && (
+                    <div className="ts-scene ts-s2" id="tsS2">
+                      <div className="top">
+                        <span className="tag-amber">
+                          <i />
+                          Awaiting payment
+                        </span>
+                        <span className="brand">Tra-Sync</span>
+                      </div>
+                      <div className="amt-wrap">
+                        <div className="amt-label">Bank transfer</div>
+                        <div className="amt-big">
+                          <small>₦</small>22,500
+                        </div>
+                        <div className="sale-id">Sale · S-0043</div>
+                      </div>
+                      <div className="status-row">
+                        <div className="status">
+                          <span className="spinner" />
+                          Waiting for payment
+                        </div>
                       </div>
                     </div>
-                    <div className="keypad" aria-hidden="true">
-                      <div className="key">1</div>
-                      <div className="key">2</div>
-                      <div className="key">3</div>
-                      <div className="key">4</div>
-                      <div className="key">5</div>
-                      <div className="key">6</div>
-                      <div className="key">7</div>
-                      <div className="key">8</div>
-                      <div className="key">9</div>
-                      <div className="key op">.</div>
-                      <div className="key">0</div>
-                      <div className="key ok">↵</div>
-                    </div>
-                    <div className="hint">
-                      <i />
-                      Type the amount · then send
-                    </div>
-                  </div>
-
-                  {/* SCENE 2: awaiting payment */}
-                  <div className="ts-scene ts-s2" id="tsS2">
-                    <div className="top">
-                      <span className="tag-amber">
-                        <i />
-                        Awaiting payment
-                      </span>
-                      <span className="brand">Tra-Sync</span>
-                    </div>
-                    <div className="amt-wrap">
-                      <div className="amt-label">Bank transfer</div>
-                      <div className="amt-big">
-                        <small>₦</small>22,500
+                  )}
+                  {activeTsStep === 2 && (
+                    <div className="ts-scene ts-s3" id="tsS3">
+                      <div className="top">
+                        <span className="tag-green">
+                          <i />
+                          Payment verified
+                        </span>
+                        <span className="brand">Tra-Sync</span>
                       </div>
-                      <div className="sale-id">Sale · S-0043</div>
-                    </div>
-                    <div className="status-row">
-                      <div className="status">
-                        <span className="spinner" />
-                        Waiting for payment
+                      <div className="check-wrap">
+                        <div className="check-big">
+                          <svg viewBox="0 0 24 24">
+                            <path d="M5 12.5l4.5 4.5L19 7.5" />
+                          </svg>
+                        </div>
+                        <div className="ok-label">Verified</div>
+                        <div className="ok-amt">
+                          <small>₦</small>22,500
+                        </div>
+                        {/* User requirement: "No POS Machine  needed. Just a phone." */}
+                        <div className="ok-tagline">"No POS Machine  needed. Just a phone."</div>
+                      </div>
+                      <div className="status-row">
+                        <div className="status">
+                          <svg className="ic">
+                            <use href="#i-check" />
+                          </svg>
+                          Sale · stock · record updated
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* SCENE 3: verified */}
-                  <div className="ts-scene ts-s3" id="tsS3">
-                    <div className="top">
-                      <span className="tag-green">
-                        <i />
-                        Payment verified
-                      </span>
-                      <span className="brand">Tra-Sync</span>
-                    </div>
-                    <div className="check-wrap">
-                      <div className="check-big">
-                        <svg viewBox="0 0 24 24">
-                          <path d="M5 12.5l4.5 4.5L19 7.5" />
-                        </svg>
-                      </div>
-                      <div className="ok-label">Verified</div>
-                      <div className="ok-amt">
-                        <small>₦</small>22,500
-                      </div>
-                      {/* User requirement: "No POS Machine  needed. Just a phone." */}
-                      <div className="ok-tagline">"No POS Machine  needed. Just a phone."</div>
-                    </div>
-                    <div className="status-row">
-                      <div className="status">
-                        <svg className="ic">
-                          <use href="#i-check" />
-                        </svg>
-                        Sale · stock · record updated
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
               <p className="ts-foot" data-reveal>
@@ -2336,8 +1287,8 @@ export default function LandingPage() {
               Straight answers.
             </h2>
             <div id="faqList">
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a1">
+              <div className={`qi ${activeFaq === 0 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 0} aria-controls="a1" onClick={() => setActiveFaq(activeFaq === 0 ? null : 0)}>
                   <span>What is VifeMS?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2352,8 +1303,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a2">
+              <div className={`qi ${activeFaq === 1 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 1} aria-controls="a2" onClick={() => setActiveFaq(activeFaq === 1 ? null : 1)}>
                   <span>How does it create a workspace?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2368,8 +1319,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a3">
+              <div className={`qi ${activeFaq === 2 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 2} aria-controls="a3" onClick={() => setActiveFaq(activeFaq === 2 ? null : 2)}>
                   <span>Do I need to code?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2381,8 +1332,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a4">
+              <div className={`qi ${activeFaq === 3 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 3} aria-controls="a4" onClick={() => setActiveFaq(activeFaq === 3 ? null : 3)}>
                   <span>Does it work for my type of business?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2397,8 +1348,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a5">
+              <div className={`qi ${activeFaq === 4 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 4} aria-controls="a5" onClick={() => setActiveFaq(activeFaq === 4 ? null : 4)}>
                   <span>What is Tra-Sync?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2413,8 +1364,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a6">
+              <div className={`qi ${activeFaq === 5 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 5} aria-controls="a6" onClick={() => setActiveFaq(activeFaq === 5 ? null : 5)}>
                   <span>Does Tra-Sync verify bank transfers yet?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2429,8 +1380,8 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="qi">
-                <button className="q" aria-expanded="false" aria-controls="a7">
+              <div className={`qi ${activeFaq === 6 ? "open" : ""}`}>
+                <button type="button" className="q" aria-expanded={activeFaq === 6} aria-controls="a7" onClick={() => setActiveFaq(activeFaq === 6 ? null : 6)}>
                   <span>Is VifeMS available now?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
@@ -2450,31 +1401,79 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer data-theme="9">
+      <footer className="site-footer">
         <div className="wrap">
-          <div className="f-top">
-            <div>
-              <Link href="#cine" className="logo">
-                <b>VifeMS</b>
+          {/* Footer Top Nav Bar */}
+          <div className="footer-nav-bar">
+            <Link href="#cine" className="logo footer-logo">
+              <b>VifeMS</b>
+            </Link>
+            <nav className="footer-nav-links" aria-label="Footer Navigation">
+              <a href="#how">How It Works</a>
+              <a href="#features">Features</a>
+              <a href="#trasync">Tra-Sync</a>
+              <a href="#usecases">Use Cases</a>
+              <a href="#why">Why VifeMS</a>
+              <a href="#faq">FAQ</a>
+            </nav>
+            <div className="footer-nav-cta">
+              <Link href="/login" className="footer-signin">
+                Sign In
               </Link>
-              <p>Business operations, built around you.</p>
-            </div>
-            <div className="f-col">
-              <h4>Explore</h4>
-              <div className="f-links">
-                <a href="#how">How It Works</a>
-                <a href="#features">Features</a>
-                <a href="#usecases">Use Cases</a>
-                <a href="#trasync">Tra-Sync</a>
-                <Link href="/login">Sign In</Link>
-                <Link href="/onboarding">Build My Workspace</Link>
-              </div>
+              <Link href="/onboarding" className="btn pri sm">
+                Build My Workspace →
+              </Link>
             </div>
           </div>
-          <div className="f-bot">© 2026 VifeMS. All rights reserved.</div>
-        </div>
-        <div className="wordmark" id="wordmark" aria-hidden="true">
-          VifeMS
+
+          {/* Footer Content Columns */}
+          <div className="footer-grid">
+            <div className="footer-brand-col">
+              <p className="footer-tagline">
+                AI-assisted business operations platform. Built around the way you actually work.
+              </p>
+              <div className="footer-status-badge">
+                <span className="status-live-dot" />
+                <span>All systems operational</span>
+              </div>
+            </div>
+
+            <div className="footer-col">
+              <h4>Product</h4>
+              <a href="#how">How It Works</a>
+              <a href="#features">Core Features</a>
+              <a href="#trasync">Tra-Sync Preview</a>
+              <a href="#usecases">Use Cases</a>
+            </div>
+
+            <div className="footer-col">
+              <h4>Solutions</h4>
+              <a href="#usecases">Retail & Inventory</a>
+              <a href="#usecases">Service Businesses</a>
+              <a href="#usecases">Orders & Delivery</a>
+              <a href="#usecases">Small Business Ops</a>
+            </div>
+
+            <div className="footer-col">
+              <h4>Platform</h4>
+              <a href="#security">Security & Access</a>
+              <a href="#why">Traditional vs VifeMS</a>
+              <Link href="/login">Workspace Login</Link>
+              <a href="mailto:support@vifems.app">Contact Support</a>
+            </div>
+          </div>
+
+          {/* Footer Bottom Bar */}
+          <div className="footer-bottom-bar">
+            <p>© {new Date().getFullYear()} VifeMS. All rights reserved.</p>
+            <div className="footer-legal-links">
+              <a href="#">Privacy Policy</a>
+              <span className="dot">·</span>
+              <a href="#">Terms of Service</a>
+              <span className="dot">·</span>
+              <a href="#">Security</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
