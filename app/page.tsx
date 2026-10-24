@@ -301,6 +301,49 @@ export default function LandingPage() {
             <div className="cine-center">
               {/* STAGE 1: centered hero text */}
               <div className="cine-text" id="cineText">
+                {/* Floating profiles around hero text */}
+                <div className="floating-profile fp-tl" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p1" /></svg>
+                  </div>
+                  <span className="fp-badge">Shop Owner</span>
+                </div>
+
+                <div className="floating-profile fp-tr" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p2" /></svg>
+                  </div>
+                  <span className="fp-badge">Attendant</span>
+                </div>
+
+                <div className="floating-profile fp-ml" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p4" /></svg>
+                  </div>
+                  <span className="fp-badge">Supplier</span>
+                </div>
+
+                <div className="floating-profile fp-mr" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p3" /></svg>
+                  </div>
+                  <span className="fp-badge">Customer</span>
+                </div>
+
+                <div className="floating-profile fp-bl" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p7" /></svg>
+                  </div>
+                  <span className="fp-badge">Accountant</span>
+                </div>
+
+                <div className="floating-profile fp-br" aria-hidden="true">
+                  <div className="fp-avatar">
+                    <svg viewBox="0 0 100 100"><use href="#p5" /></svg>
+                  </div>
+                  <span className="fp-badge">Courier</span>
+                </div>
+
                 <p className="eyebrow">AI-Powered Business Operations</p>
                 <h1 className="cine-title">
                   Your Business.
@@ -448,50 +491,88 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* orbiting people + icons */}
-            <div className="orbit" id="orbitPeople" aria-hidden="true" />
-            <div className="orbit" id="orbitIcons" aria-hidden="true" />
 
-            <div className="scrollcue" id="scrollcue">
-              <span>Scroll</span>
-              <i />
-            </div>
           </div>
         </section>
 
-        {/* ============ BAND ============ */}
-        <section className="band" aria-hidden="true">
-          <div className="row r1">
-            <span className="f">Retail shop</span>
-            <em />
-            <span>Bakery</span>
-            <em />
-            <span className="g">Auto workshop</span>
-            <em />
-            <span className="f">Fashion studio</span>
-            <em />
-            <span>Training center</span>
-            <em />
-            <span className="g">Delivery service</span>
-            <em />
-            <span className="f">Retail shop</span>
-            <em />
-            <span>Bakery</span>
+        {/* ============ BAND / MARQUEE ============ */}
+        <section className="band" aria-label="Businesses and Workspaces">
+          <div className="marquee-track-wrap">
+            <div className="marquee-row r1">
+              <div className="marquee-content">
+                <span className="f">Retail shop</span>
+                <em />
+                <span>Bakery</span>
+                <em />
+                <span className="g">Auto workshop</span>
+                <em />
+                <span className="f">Fashion studio</span>
+                <em />
+                <span>Training center</span>
+                <em />
+                <span className="g">Delivery service</span>
+                <em />
+                <span className="f">Retail shop</span>
+                <em />
+                <span>Bakery</span>
+                <em />
+              </div>
+              <div className="marquee-content" aria-hidden="true">
+                <span className="f">Retail shop</span>
+                <em />
+                <span>Bakery</span>
+                <em />
+                <span className="g">Auto workshop</span>
+                <em />
+                <span className="f">Fashion studio</span>
+                <em />
+                <span>Training center</span>
+                <em />
+                <span className="g">Delivery service</span>
+                <em />
+                <span className="f">Retail shop</span>
+                <em />
+                <span>Bakery</span>
+                <em />
+              </div>
+            </div>
           </div>
-          <div className="row r2">
-            <span>Your business</span>
-            <em />
-            <span className="g">your rules</span>
-            <em />
-            <span className="f">your workspace</span>
-            <em />
-            <span>Your business</span>
-            <em />
-            <span className="g">your rules</span>
-            <em />
-            <span className="f">your workspace</span>
-            <em />
-            <span>Your business</span>
+
+          <div className="marquee-track-wrap">
+            <div className="marquee-row r2">
+              <div className="marquee-content">
+                <span>Your business</span>
+                <em />
+                <span className="g">your rules</span>
+                <em />
+                <span className="f">your workspace</span>
+                <em />
+                <span>Your business</span>
+                <em />
+                <span className="g">your rules</span>
+                <em />
+                <span className="f">your workspace</span>
+                <em />
+                <span>Your business</span>
+                <em />
+              </div>
+              <div className="marquee-content" aria-hidden="true">
+                <span>Your business</span>
+                <em />
+                <span className="g">your rules</span>
+                <em />
+                <span className="f">your workspace</span>
+                <em />
+                <span>Your business</span>
+                <em />
+                <span className="g">your rules</span>
+                <em />
+                <span className="f">your workspace</span>
+                <em />
+                <span>Your business</span>
+                <em />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -560,25 +641,7 @@ export default function LandingPage() {
                 </div>
                 <p className="lead">Four steps. One workspace.</p>
               </div>
-              <div className="rail" id="rail">
-                <div className="fill" id="railFill" />
-                <div className="st">
-                  <b>1</b>
-                  <span>Describe</span>
-                </div>
-                <div className="st">
-                  <b>2</b>
-                  <span>Generate</span>
-                </div>
-                <div className="st">
-                  <b>3</b>
-                  <span>Provision</span>
-                </div>
-                <div className="st">
-                  <b>4</b>
-                  <span>Manage</span>
-                </div>
-              </div>
+
               <div className="stage">
                 <div className="panel">
                   <div>
@@ -1401,79 +1464,31 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="site-footer">
+      <footer data-theme="9">
         <div className="wrap">
-          {/* Footer Top Nav Bar */}
-          <div className="footer-nav-bar">
-            <Link href="#cine" className="logo footer-logo">
-              <b>VifeMS</b>
-            </Link>
-            <nav className="footer-nav-links" aria-label="Footer Navigation">
-              <a href="#how">How It Works</a>
-              <a href="#features">Features</a>
-              <a href="#trasync">Tra-Sync</a>
-              <a href="#usecases">Use Cases</a>
-              <a href="#why">Why VifeMS</a>
-              <a href="#faq">FAQ</a>
-            </nav>
-            <div className="footer-nav-cta">
-              <Link href="/login" className="footer-signin">
-                Sign In
+          <div className="f-top">
+            <div>
+              <Link href="#cine" className="logo">
+                <b>VifeMS</b>
               </Link>
-              <Link href="/onboarding" className="btn pri sm">
-                Build My Workspace →
-              </Link>
+              <p>Business operations, built around you.</p>
             </div>
-          </div>
-
-          {/* Footer Content Columns */}
-          <div className="footer-grid">
-            <div className="footer-brand-col">
-              <p className="footer-tagline">
-                AI-assisted business operations platform. Built around the way you actually work.
-              </p>
-              <div className="footer-status-badge">
-                <span className="status-live-dot" />
-                <span>All systems operational</span>
+            <div className="f-col">
+              <h4>Explore</h4>
+              <div className="f-links">
+                <a href="#how">How It Works</a>
+                <a href="#features">Features</a>
+                <a href="#usecases">Use Cases</a>
+                <a href="#trasync">Tra-Sync</a>
+                <Link href="/login">Sign In</Link>
+                <Link href="/onboarding">Build My Workspace</Link>
               </div>
             </div>
-
-            <div className="footer-col">
-              <h4>Product</h4>
-              <a href="#how">How It Works</a>
-              <a href="#features">Core Features</a>
-              <a href="#trasync">Tra-Sync Preview</a>
-              <a href="#usecases">Use Cases</a>
-            </div>
-
-            <div className="footer-col">
-              <h4>Solutions</h4>
-              <a href="#usecases">Retail & Inventory</a>
-              <a href="#usecases">Service Businesses</a>
-              <a href="#usecases">Orders & Delivery</a>
-              <a href="#usecases">Small Business Ops</a>
-            </div>
-
-            <div className="footer-col">
-              <h4>Platform</h4>
-              <a href="#security">Security & Access</a>
-              <a href="#why">Traditional vs VifeMS</a>
-              <Link href="/login">Workspace Login</Link>
-              <a href="mailto:support@vifems.app">Contact Support</a>
-            </div>
           </div>
-
-          {/* Footer Bottom Bar */}
-          <div className="footer-bottom-bar">
-            <p>© {new Date().getFullYear()} VifeMS. All rights reserved.</p>
-            <div className="footer-legal-links">
-              <a href="#">Privacy Policy</a>
-              <span className="dot">·</span>
-              <a href="#">Terms of Service</a>
-              <span className="dot">·</span>
-              <a href="#">Security</a>
-            </div>
-          </div>
+          <div className="f-bot">© {new Date().getFullYear()} VifeMS. All rights reserved.</div>
+        </div>
+        <div className="wordmark" id="wordmark" aria-hidden="true">
+          VifeMS
         </div>
       </footer>
     </div>
