@@ -11,6 +11,11 @@ export function HowItWorks() {
     const element = sectionRef.current;
     if (!element) return;
 
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -18,7 +23,7 @@ export function HowItWorks() {
           observer.disconnect();
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
     observer.observe(element);
@@ -34,8 +39,10 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
         <div
-          className={`mb-16 transition-all duration-700 transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          className={`mb-16 md:transition-all md:duration-250 md:transform will-change-[transform,opacity] transform-gpu ${
+            isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
           }`}
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-slate-200 bg-white shadow-2xs text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">
@@ -50,14 +57,15 @@ export function HowItWorks() {
           </p>
         </div>
 
-        {/* 3 Step Cards Grid with Staggered Entry Animation */}
+        {/* 3 Step Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Step 01 */}
           <div
-            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-xl transition-all duration-700 transform ease-out group hover:-translate-y-1.5 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-lg md:transition-all md:duration-250 md:transform ease-out group hover:-translate-y-1 will-change-[transform,opacity] transform-gpu ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-6"
             }`}
-            style={{ transitionDelay: "150ms" }}
           >
             <div className="flex items-center justify-between mb-8">
               <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white font-black text-base flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -83,10 +91,11 @@ export function HowItWorks() {
 
           {/* Step 02 */}
           <div
-            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-xl transition-all duration-700 transform ease-out group hover:-translate-y-1.5 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-lg md:transition-all md:duration-250 md:transform ease-out group hover:-translate-y-1 will-change-[transform,opacity] transform-gpu ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-6"
             }`}
-            style={{ transitionDelay: "300ms" }}
           >
             <div className="flex items-center justify-between mb-8">
               <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white font-black text-base flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -112,10 +121,11 @@ export function HowItWorks() {
 
           {/* Step 03 */}
           <div
-            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-xl transition-all duration-700 transform ease-out group hover:-translate-y-1.5 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+            className={`bg-white p-8 sm:p-9 rounded-3xl border border-slate-200/90 shadow-md hover:shadow-lg md:transition-all md:duration-250 md:transform ease-out group hover:-translate-y-1 will-change-[transform,opacity] transform-gpu ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-6"
             }`}
-            style={{ transitionDelay: "450ms" }}
           >
             <div className="flex items-center justify-between mb-8">
               <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white font-black text-base flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -140,12 +150,13 @@ export function HowItWorks() {
           </div>
         </div>
 
-        {/* Feature Highlights Cards Grid with Staggered Fade */}
+        {/* Feature Highlights Cards Grid */}
         <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12 transition-all duration-700 transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12 md:transition-all md:duration-250 md:transform will-change-[transform,opacity] transform-gpu ${
+            isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-6"
           }`}
-          style={{ transitionDelay: "600ms" }}
         >
           <div className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-3.5 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all">
             <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">

@@ -679,6 +679,10 @@ export default function LandingPage() {
           });
 
           $$("[data-reveal]").forEach((el: HTMLElement) => {
+            if (window.innerWidth < 768) {
+              gsapInstance.set(el, { opacity: 1, y: 0, clearProps: "transform" });
+              return;
+            }
             gsapInstance.from(el, {
               y: 40,
               opacity: 0,

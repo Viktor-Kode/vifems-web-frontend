@@ -40,6 +40,11 @@ export function FAQ() {
     const element = sectionRef.current;
     if (!element) return;
 
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -47,7 +52,7 @@ export function FAQ() {
           observer.disconnect();
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
     observer.observe(element);
@@ -57,8 +62,10 @@ export function FAQ() {
   return (
     <section id="faq" ref={sectionRef} className="py-14 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
       <div
-        className={`text-center mb-12 transition-all duration-700 transform ${
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        className={`text-center mb-12 md:transition-all md:duration-250 md:transform will-change-[transform,opacity] transform-gpu ${
+          isVisible
+            ? "opacity-100 translate-y-0"
+            : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
         }`}
       >
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
@@ -78,9 +85,10 @@ export function FAQ() {
           return (
             <div
               key={index}
-              style={{ transitionDelay: `${index * 100}ms` }}
-              className={`bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all duration-500 transform shadow-2xs ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              className={`bg-white border border-slate-200 rounded-2xl overflow-hidden md:transition-all md:duration-250 md:transform shadow-2xs will-change-[transform,opacity] transform-gpu ${
+                isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
               }`}
             >
               <button

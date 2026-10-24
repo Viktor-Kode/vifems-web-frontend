@@ -478,7 +478,7 @@ export function Hero() {
       <div className="relative z-10 px-4 sm:px-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
         {/* Left Content */}
         <div
-          className={`lg:col-span-6 flex flex-col items-start text-left transition-all duration-700 ease-out transform ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          className={`lg:col-span-6 flex flex-col items-start text-left md:transition-all md:duration-250 ease-out md:transform will-change-[transform,opacity] transform-gpu ${isLoaded ? "opacity-100 translate-y-0" : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
             }`}
         >
 
@@ -521,7 +521,7 @@ export function Hero() {
 
         {/* Right – Animation */}
         <div
-          className={`lg:col-span-6 w-full transition-all duration-1000 delay-150 ease-out transform ${isLoaded ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"
+          className={`lg:col-span-6 w-full md:transition-all md:duration-250 ease-out md:transform will-change-[transform,opacity] transform-gpu ${isLoaded ? "opacity-100 scale-100 translate-y-0" : "opacity-100 md:opacity-0 scale-100 md:scale-95 translate-y-0 md:translate-y-4"
             }`}
         >
           <div

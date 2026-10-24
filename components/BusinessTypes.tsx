@@ -66,6 +66,11 @@ export function BusinessTypes({ selectedExample, onSelectExample }: BusinessType
     const element = sectionRef.current;
     if (!element) return;
 
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -73,7 +78,7 @@ export function BusinessTypes({ selectedExample, onSelectExample }: BusinessType
           observer.disconnect();
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
     observer.observe(element);
@@ -84,8 +89,10 @@ export function BusinessTypes({ selectedExample, onSelectExample }: BusinessType
     <section ref={sectionRef} className="py-12 sm:py-16 px-4 sm:px-6 bg-slate-100/70 border-y border-slate-200/80">
       <div className="max-w-7xl mx-auto">
         <div
-          className={`mb-8 transition-all duration-700 transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          className={`mb-8 md:transition-all md:duration-250 md:transform will-change-[transform,opacity] transform-gpu ${
+            isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
           }`}
         >
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
@@ -96,17 +103,18 @@ export function BusinessTypes({ selectedExample, onSelectExample }: BusinessType
           </p>
         </div>
 
-        {/* Business Cards Grid with Staggered Entrance */}
+        {/* Business Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {BUSINESS_EXAMPLES.map((example, idx) => {
+          {BUSINESS_EXAMPLES.map((example) => {
             const isSelected = selectedExample?.id === example.id;
             return (
               <div
                 key={example.id}
                 onClick={() => onSelectExample(example)}
-                style={{ transitionDelay: `${idx * 120}ms` }}
-                className={`cursor-pointer rounded-2xl p-5 border transition-all duration-500 transform bg-white flex flex-col justify-between ${
-                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                className={`cursor-pointer rounded-2xl p-5 border md:transition-all md:duration-250 md:transform bg-white flex flex-col justify-between will-change-[transform,opacity] transform-gpu ${
+                  isVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-100 md:opacity-0 translate-y-0 md:translate-y-4"
                 } ${
                   isSelected
                     ? "border-slate-900 ring-2 ring-slate-900/10 shadow-md"

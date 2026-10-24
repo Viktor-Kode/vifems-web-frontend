@@ -31,6 +31,12 @@ export function GeneratorDemo({ selectedExample }: GeneratorDemoProps) {
     const element = sectionRef.current;
     if (!element) return;
 
+    // Mobile viewport check: immediately mark visible and skip observer
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setHasEnteredView(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

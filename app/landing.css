@@ -2827,3 +2827,56 @@ footer {
   .cine-note { font-size: .72rem; }
   .orb .lbl { display: none; }
 }
+
+/* Mobile Animation & Backdrop Override (<= 768px) */
+@media (max-width: 768px) {
+  [data-reveal],
+  .reveal,
+  .fade-up,
+  .animate-on-scroll,
+  .cine-text .eyebrow,
+  .cine-title,
+  .cine-sub,
+  .cine-cta,
+  .cine-note,
+  .panel,
+  .band .r1,
+  .band .r2,
+  .pline,
+  #cineDash {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Hardware acceleration cleanup: strip heavy backdrop blurs on mobile */
+  #top.solid .nav,
+  .ts-frame,
+  .pv,
+  .stat,
+  .fchip,
+  .ts-head,
+  .ts-foot {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Desktop Animation & Smooth Scroll Optimization (min-width: 769px) */
+@media (min-width: 769px) {
+  [data-reveal],
+  .panel,
+  .band .r1,
+  .band .r2,
+  .pline,
+  #cineDash,
+  .card,
+  .orb,
+  .iorb {
+    will-change: transform, opacity;
+    transform: translate3d(0, 0, 0);
+    transition-duration: 250ms !important;
+  }
+}
+
+
