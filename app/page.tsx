@@ -1229,7 +1229,7 @@ export default function LandingPage() {
               </div>
               <div className={`qi ${activeFaq === 4 ? "open" : ""}`}>
                 <button type="button" className="q" aria-expanded={activeFaq === 4} aria-controls="a5" onClick={() => setActiveFaq(activeFaq === 4 ? null : 4)}>
-                  <span>What is Tra-Sync?</span>
+                  <span>Is VifeMS available now?</span>
                   <svg className="ic">
                     <use href="#i-plus" />
                   </svg>
@@ -1237,40 +1237,7 @@ export default function LandingPage() {
                 <div className="a" id="a5" role="region">
                   <div>
                     <p>
-                      A preview of a planned payment verification flow. Today it's illustrative — the current backend
-                      records payments manually. Server-side verification is the next step.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className={`qi ${activeFaq === 5 ? "open" : ""}`}>
-                <button type="button" className="q" aria-expanded={activeFaq === 5} aria-controls="a6" onClick={() => setActiveFaq(activeFaq === 5 ? null : 5)}>
-                  <span>Does Tra-Sync verify bank transfers yet?</span>
-                  <svg className="ic">
-                    <use href="#i-plus" />
-                  </svg>
-                </button>
-                <div className="a" id="a6" role="region">
-                  <div>
-                    <p>
-                      Not yet. Payments are recorded manually. Only server-side provider verification will mark a sale as
-                      paid.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className={`qi ${activeFaq === 6 ? "open" : ""}`}>
-                <button type="button" className="q" aria-expanded={activeFaq === 6} aria-controls="a7" onClick={() => setActiveFaq(activeFaq === 6 ? null : 6)}>
-                  <span>Is VifeMS available now?</span>
-                  <svg className="ic">
-                    <use href="#i-plus" />
-                  </svg>
-                </button>
-                <div className="a" id="a7" role="region">
-                  <div>
-                    <p>
-                      Yes — start with Build My Workspace. Some capabilities (like Tra-Sync) are previews, clearly
-                      labelled on the page.
+                      Yes — get started directly with Build My Workspace.
                     </p>
                   </div>
                 </div>
