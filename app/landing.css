@@ -2945,6 +2945,23 @@ footer {
     transition: none !important;
   }
 
+  /* Completely kill full-screen SVG fractal noise and blur(90px) living background on mobile */
+  #bg .blob,
+  #bg .grain {
+    display: none !important;
+  }
+
+  #bg {
+    background: #FFFFFF !important;
+  }
+
+  /* Instant loader removal on mobile viewports */
+  #loader {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
   /* Hardware acceleration cleanup: strip heavy backdrop blurs on mobile */
   #top.solid .nav,
   .ts-frame,

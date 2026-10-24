@@ -15,6 +15,19 @@ export default function LandingPage() {
     let lenisInstance: any = null;
     let isCleanedUp = false;
 
+    // Mobile screen check (< 768px): completely skip heavy JS animation libs, loader wait, and orbit creation
+    const isMobileDevice =
+      typeof window !== "undefined" &&
+      (window.innerWidth <= 768 ||
+        /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+    if (isMobileDevice) {
+      setLoaderHidden(true);
+      document.documentElement.classList.add("static", "mobile-static");
+      return;
+    }
+
     // Loader percentage simulation
     let pct = 0;
     const interval = setInterval(() => {
