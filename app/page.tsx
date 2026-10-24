@@ -7,7 +7,6 @@ import "./landing.css";
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [activeTsStep, setActiveTsStep] = useState(0);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -234,9 +233,6 @@ export default function LandingPage() {
             <li>
               <a href="#usecases">Use Cases</a>
             </li>
-            <li>
-              <a href="#trasync">Tra-Sync</a>
-            </li>
           </ul>
           <div className="acts">
             <Link className="signin" href="/login">
@@ -271,9 +267,6 @@ export default function LandingPage() {
         <a href="#usecases" onClick={closeMenu}>
           Use Cases
         </a>
-        <a href="#trasync" onClick={closeMenu}>
-          Tra-Sync
-        </a>
         <Link href="/login" onClick={closeMenu}>
           Sign In
         </Link>
@@ -288,7 +281,6 @@ export default function LandingPage() {
         <a href="#problem" data-l="Problem" aria-label="Problem" />
         <a href="#how" data-l="How it works" aria-label="How it works" />
         <a href="#features" data-l="Features" aria-label="Features" />
-        <a href="#trasync" data-l="Tra-Sync" aria-label="Tra-Sync" />
         <a href="#usecases" data-l="Use cases" aria-label="Use cases" />
         <a href="#why" data-l="Why VifeMS" aria-label="Why VifeMS" />
         <a href="#security" data-l="Security" aria-label="Security" />
@@ -878,183 +870,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ============ TRA-SYNC (3-scene story) ============ */}
-        <section id="trasync" data-theme="4">
-          <div className="ts-pin">
-            <div className="wrap">
-              <div className="ts-grid">
-                <div className="ts-copy">
-                  <div className="tag2">
-                    <span className="eyebrow">Introducing Tra-Sync</span>
-                    <span className="preview-badge">Preview</span>
-                  </div>
-                  <h2 className="display" data-split>
-                    Watch a sale verify itself.
-                  </h2>
-                  <p className="l" data-reveal>
-                    Attendant enters the price. Customer pays by transfer. Tra-Sync confirms it. Sale, stock and record —
-                    updated automatically.
-                  </p>
-                  <div className="ts-pills" data-reveal>
-                    <span className="ts-pill">
-                      <svg className="ic">
-                        <use href="#i-phone" />
-                      </svg>
-                      No POS needed
-                    </span>
-                    <span className="ts-pill">
-                      <svg className="ic">
-                        <use href="#i-shield" />
-                      </svg>
-                      Server-verified
-                    </span>
-                    <span className="ts-pill">
-                      <svg className="ic">
-                        <use href="#i-check" />
-                      </svg>
-                      Auto-recorded
-                    </span>
-                  </div>
-                  <div className="ts-progress" id="tsProgress">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTsStep(0)}
-                      className={activeTsStep === 0 ? "on" : ""}
-                    >
-                      1 · Enter
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTsStep(1)}
-                      className={activeTsStep === 1 ? "on" : ""}
-                    >
-                      2 · Awaiting
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTsStep(2)}
-                      className={`ok ${activeTsStep === 2 ? "on" : ""}`}
-                    >
-                      3 · Verified
-                    </button>
-                  </div>
-                </div>
 
-                <div className="ts-stage" id="tsStage">
-                  {activeTsStep === 0 && (
-                    <div className="ts-scene ts-s1" id="tsS1">
-                      <div className="top">
-                        <span className="tag-blue">
-                          <i />
-                          New sale · attendant
-                        </span>
-                        <span className="brand">Tra-Sync</span>
-                      </div>
-                      <div className="who">
-                        <span className="av">
-                          <svg viewBox="0 0 100 100">
-                            <use href="#p2" />
-                          </svg>
-                        </span>
-                        <div className="meta">
-                          <small>Entered by</small>
-                          <b>Ada · Attendant</b>
-                        </div>
-                      </div>
-                      <div className="display-amt">
-                        <div className="cur">₦</div>
-                        <div className="val">
-                          <span id="typeAmt">22,500</span>
-                          <span className="caret" />
-                        </div>
-                      </div>
-                      <div className="keypad" aria-hidden="true">
-                        <div className="key">1</div>
-                        <div className="key">2</div>
-                        <div className="key">3</div>
-                        <div className="key">4</div>
-                        <div className="key">5</div>
-                        <div className="key">6</div>
-                        <div className="key">7</div>
-                        <div className="key">8</div>
-                        <div className="key">9</div>
-                        <div className="key op">.</div>
-                        <div className="key">0</div>
-                        <div className="key ok">↵</div>
-                      </div>
-                      <div className="hint">
-                        <i />
-                        Type the amount · then send
-                      </div>
-                    </div>
-                  )}
-                  {activeTsStep === 1 && (
-                    <div className="ts-scene ts-s2" id="tsS2">
-                      <div className="top">
-                        <span className="tag-amber">
-                          <i />
-                          Awaiting payment
-                        </span>
-                        <span className="brand">Tra-Sync</span>
-                      </div>
-                      <div className="amt-wrap">
-                        <div className="amt-label">Bank transfer</div>
-                        <div className="amt-big">
-                          <small>₦</small>22,500
-                        </div>
-                        <div className="sale-id">Sale · S-0043</div>
-                      </div>
-                      <div className="status-row">
-                        <div className="status">
-                          <span className="spinner" />
-                          Waiting for payment
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {activeTsStep === 2 && (
-                    <div className="ts-scene ts-s3" id="tsS3">
-                      <div className="top">
-                        <span className="tag-green">
-                          <i />
-                          Payment verified
-                        </span>
-                        <span className="brand">Tra-Sync</span>
-                      </div>
-                      <div className="check-wrap">
-                        <div className="check-big">
-                          <svg viewBox="0 0 24 24">
-                            <path d="M5 12.5l4.5 4.5L19 7.5" />
-                          </svg>
-                        </div>
-                        <div className="ok-label">Verified</div>
-                        <div className="ok-amt">
-                          <small>₦</small>22,500
-                        </div>
-                        {/* User requirement: "No POS Machine  needed. Just a phone." */}
-                        <div className="ok-tagline">"No POS Machine  needed. Just a phone."</div>
-                      </div>
-                      <div className="status-row">
-                        <div className="status">
-                          <svg className="ic">
-                            <use href="#i-check" />
-                          </svg>
-                          Sale · stock · record updated
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="ts-foot" data-reveal>
-                <svg className="ic">
-                  <use href="#i-lock" />
-                </svg>
-                Preview only. Sample data. Only server-side provider verification marks a sale paid.
-              </p>
-            </div>
-          </div>
-        </section>
 
         {/* ============ USE CASES ============ */}
         <section id="usecases" className="pad" data-theme="5">
@@ -1479,7 +1295,6 @@ export default function LandingPage() {
                 <a href="#how">How It Works</a>
                 <a href="#features">Features</a>
                 <a href="#usecases">Use Cases</a>
-                <a href="#trasync">Tra-Sync</a>
                 <Link href="/login">Sign In</Link>
                 <Link href="/onboarding">Build My Workspace</Link>
               </div>
